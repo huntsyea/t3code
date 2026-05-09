@@ -48,6 +48,8 @@ import { ProjectFaviconResolverLive } from "./project/Layers/ProjectFaviconResol
 import { RepositoryIdentityResolverLive } from "./project/Layers/RepositoryIdentityResolver.ts";
 import { ThreadTabPersistenceLive } from "./vault/ThreadTabPersistence.ts";
 import { VaultReaderLive } from "./vault/VaultReader.ts";
+import { VaultWatcherLive } from "./vault/VaultWatcher.ts";
+import { VaultWriterLive } from "./vault/VaultWriter.ts";
 import { WorkspaceEntriesLive } from "./workspace/Layers/WorkspaceEntries.ts";
 import { WorkspaceFileSystemLive } from "./workspace/Layers/WorkspaceFileSystem.ts";
 import { WorkspacePathsLive } from "./workspace/Layers/WorkspacePaths.ts";
@@ -237,6 +239,8 @@ const WorkspaceLayerLive = Layer.mergeAll(
   WorkspaceEntriesLayerLive,
   WorkspaceFileSystemLayerLive,
   VaultReaderLayerLive,
+  VaultWatcherLive,
+  VaultWriterLive,
   ThreadTabPersistenceLayerLive,
 );
 

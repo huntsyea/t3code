@@ -73,6 +73,7 @@ export interface WsRpcClient {
   readonly vault: {
     readonly listEntries: RpcUnaryMethod<typeof WS_METHODS.vaultListEntries>;
     readonly readNote: RpcUnaryMethod<typeof WS_METHODS.vaultReadNote>;
+    readonly writeNote: RpcUnaryMethod<typeof WS_METHODS.vaultWriteNote>;
   };
   readonly filesystem: {
     readonly browse: RpcUnaryMethod<typeof WS_METHODS.filesystemBrowse>;
@@ -197,6 +198,7 @@ export function createWsRpcClient(transport: WsTransport): WsRpcClient {
       listEntries: (input) =>
         transport.request((client) => client[WS_METHODS.vaultListEntries](input)),
       readNote: (input) => transport.request((client) => client[WS_METHODS.vaultReadNote](input)),
+      writeNote: (input) => transport.request((client) => client[WS_METHODS.vaultWriteNote](input)),
     },
     filesystem: {
       browse: (input) => transport.request((client) => client[WS_METHODS.filesystemBrowse](input)),

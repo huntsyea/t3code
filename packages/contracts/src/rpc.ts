@@ -68,11 +68,17 @@ import {
   ProjectWriteFileResult,
 } from "./project.ts";
 import {
+  VaultFileEvent,
   VaultListEntriesInput,
   VaultListEntriesResult,
   VaultReaderError,
   VaultReadNoteInput,
   VaultReadNoteResult,
+  VaultSubscribeFileEventsInput,
+  VaultWatcherError,
+  VaultWriteNoteInput,
+  VaultWriteNoteResult,
+  VaultWriterError,
 } from "./vault.ts";
 import {
   TerminalClearInput,
@@ -125,6 +131,8 @@ export const WS_METHODS = {
   // Vault methods
   vaultReadNote: "vault.readNote",
   vaultListEntries: "vault.listEntries",
+  vaultWriteNote: "vault.writeNote",
+  vaultSubscribeFileEvents: "vault.subscribeFileEvents",
 
   // Shell methods
   shellOpenInEditor: "shell.openInEditor",
@@ -305,6 +313,19 @@ export const WsVaultListEntriesRpc = Rpc.make(WS_METHODS.vaultListEntries, {
   payload: VaultListEntriesInput,
   success: VaultListEntriesResult,
   error: VaultReaderError,
+});
+
+export const WsVaultWriteNoteRpc = Rpc.make(WS_METHODS.vaultWriteNote, {
+  payload: VaultWriteNoteInput,
+  success: VaultWriteNoteResult,
+  error: VaultWriterError,
+});
+
+export const WsVaultSubscribeFileEventsRpc = Rpc.make(WS_METHODS.vaultSubscribeFileEvents, {
+  payload: VaultSubscribeFileEventsInput,
+  success: VaultFileEvent,
+  error: VaultWatcherError,
+  stream: true,
 });
 
 export const WsShellOpenInEditorRpc = Rpc.make(WS_METHODS.shellOpenInEditor, {
@@ -532,6 +553,8 @@ export const WsRpcGroup = RpcGroup.make(
   WsProjectsWriteFileRpc,
   WsVaultReadNoteRpc,
   WsVaultListEntriesRpc,
+  WsVaultWriteNoteRpc,
+  WsVaultSubscribeFileEventsRpc,
   WsShellOpenInEditorRpc,
   WsFilesystemBrowseRpc,
   WsSubscribeVcsStatusRpc,

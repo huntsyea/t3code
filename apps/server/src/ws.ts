@@ -32,6 +32,7 @@ import {
   type TabStateChange,
   ThreadId,
   type TerminalEvent,
+  type VaultFileEvent,
   WS_METHODS,
   WsRpcGroup,
 } from "@t3tools/contracts";
@@ -59,6 +60,8 @@ import { redactServerSettingsForClient, ServerSettingsService } from "./serverSe
 import { TerminalManager } from "./terminal/Services/Manager.ts";
 import { ThreadTabPersistence } from "./vault/ThreadTabPersistence.ts";
 import { VaultReader } from "./vault/VaultReader.ts";
+import { VaultWatcher } from "./vault/VaultWatcher.ts";
+import { VaultWriter } from "./vault/VaultWriter.ts";
 import { WorkspaceEntries } from "./workspace/Services/WorkspaceEntries.ts";
 import { WorkspaceFileSystem } from "./workspace/Services/WorkspaceFileSystem.ts";
 import { WorkspacePathOutsideRootError } from "./workspace/Services/WorkspacePaths.ts";
@@ -181,6 +184,8 @@ const makeWsRpcLayer = (currentSessionId: AuthSessionId) =>
       const workspaceEntries = yield* WorkspaceEntries;
       const workspaceFileSystem = yield* WorkspaceFileSystem;
       const vaultReader = yield* VaultReader;
+      const vaultWatcher = yield* VaultWatcher;
+      const vaultWriter = yield* VaultWriter;
       const threadTabPersistence = yield* ThreadTabPersistence;
       const projectSetupScriptRunner = yield* ProjectSetupScriptRunner;
       const repositoryIdentityResolver = yield* RepositoryIdentityResolver;
@@ -983,6 +988,21 @@ const makeWsRpcLayer = (currentSessionId: AuthSessionId) =>
           observeRpcEffect(WS_METHODS.vaultListEntries, vaultReader.listEntries(input), {
             "rpc.aggregate": "vault",
           }),
+        [WS_METHODS.vaultWriteNote]: (input) =>
+          observeRpcEffect(WS_METHODS.vaultWriteNote, vaultWriter.writeNote(input), {
+            "rpc.aggregate": "vault",
+          }),
+        [WS_METHODS.vaultSubscribeFileEvents]: (input) =>
+          observeRpcStream(
+            WS_METHODS.vaultSubscribeFileEvents,
+            Stream.callback<VaultFileEvent>((queue) =>
+              Effect.acquireRelease(
+                vaultWatcher.subscribe(input.projectId, (event) => Queue.offer(queue, event)),
+                (unsubscribe) => Effect.sync(unsubscribe),
+              ),
+            ),
+            { "rpc.aggregate": "vault" },
+          ),
         [WS_METHODS.shellOpenInEditor]: (input) =>
           observeRpcEffect(WS_METHODS.shellOpenInEditor, open.openInEditor(input), {
             "rpc.aggregate": "workspace",

@@ -45,6 +45,7 @@ import Migration0029 from "./Migrations/029_ProjectionThreadDetailOrderingIndexe
 import Migration0030 from "./Migrations/030_ProjectionThreadShellArchiveIndexes.ts";
 import Migration0031 from "./Migrations/031_ProjectionProjectsKind.ts";
 import Migration0032 from "./Migrations/032_ThreadTabState.ts";
+import Migration0033 from "./Migrations/033_VaultIndexTables.ts";
 
 /**
  * Migration loader with all migrations defined inline.
@@ -89,6 +90,7 @@ export const migrationEntries = [
   [30, "ProjectionThreadShellArchiveIndexes", Migration0030],
   [31, "ProjectionProjectsKind", Migration0031],
   [32, "ThreadTabState", Migration0032],
+  [33, "VaultIndexTables", Migration0033],
 ] as const;
 
 export const makeMigrationLoader = (throughId?: number) =>

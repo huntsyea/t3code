@@ -87,3 +87,29 @@
 - Web `Project.kind` is typed as optional (`"code" | "vault" | undefined`) in `apps/web/src/types.ts:87`, so `Map<ProjectId, string>` construction needs `flatMap` filtering of `undefined`, not a plain `map`.
 - TabStrip mounting into ChatView is still pending — both T6 (TabStrip) and T8 (EmptyWorkspace) created standalone components that take `{threadId, environmentId}` props but are not yet wired into `apps/web/src/components/ChatView.tsx`. A future task should mount both inside the chat column.
 - Pre-existing typecheck failures (`apps/server/src/bin.test.ts`, `server.test.ts`, `SafeVaultWrite.ts`) remain — they were noted as out-of-scope in earlier task learnings. Web app typecheck (`cd apps/web && bun typecheck`) is clean and all 1050 web tests pass.
+
+## Task 10 — VaultIndex (033 migration + Effect service)
+
+- Migration 033 adds 4 tables — all include `vault_id TEXT NOT NULL` for cross-vault isolation:
+  - `vault_notes` (PK: vault_id, relative_path) — metadata only, no body column
+  - `vault_wikilinks` (+ idx_target, idx_source)
+  - `vault_tags` (+ idx_tag, idx_source)
+  - `vault_notes_fts5` regular (self-content) FTS5 — **must NOT use contentless** (`content=''`) because contentless mode does not support `snippet()`
+- FTS5 query sanitization: strip `["'()*:^\-+]` then wrap each token in `"..."` and AND-join. Defends against `"; DROP TABLE …` style injection attempts at the MATCH layer; SQL-level injection is already blocked by parameterized queries.
+- `sql.withTransaction(...)` wraps multi-statement upserts so partial writes (e.g., note row inserted but FTS row missing) cannot leak.
+- `it.layer(...)` from `@effect/vitest` builds the Layer ONCE per `describe`. Tests using shared SQLite state must either (a) clean up explicitly, (b) use unique `vault_id` per test (preferred — also exercises `vault_id` filtering naturally).
+- Pre-existing rpc.ts bug fixed in passing: `WsVaultSubscribeFileEventsRpc` referenced `VaultSubscribeFileEventsInput` / `VaultFileEvent` / `VaultWatcherError` without importing them, causing a module-load `ReferenceError` that blocked every server test from running. Imports added.
+
+## Task 9 — VaultWatcher (chokidar + subscribe pattern)
+
+- chokidar 5.0.0 (cross-platform, Node ≥20.19) — installed into `apps/server`. Importing `chokidar.watch(paths, options)` is the v5 entry point; exports `FSWatcher` typed `EventEmitter` with `add`/`change`/`unlink`/`error`/`all` events.
+- Subscribe pattern (NOT OrchestrationEngine): `VaultWatcher.subscribe(projectId, handler) → unsubscribe` mirrors `TerminalManager.subscribe`. Per-project state held in `SynchronizedRef<Map<projectId, ProjectWatcherEntry>>`; first subscriber starts chokidar, last unsubscriber tears down (refcounted by listener count).
+- Path resolution lookup via `ProjectionProjectRepository.getById` (kind must equal `"vault"`) — same shape as `VaultReader.loadVaultRoot`. Keep the lookup in the watcher so the WS handler stays dumb.
+- Debounce/batch via `DrainableWorker<readonly VaultFileEvent[]>` — `NodeTimers.setTimeout` (250ms default) collects events into a per-entry `Map<string, VaultFileEvent>` keyed by `${kind}:${relativePath}`, then `worker.enqueue(batch)` ships the batch. Worker ensures `tearDown` drains pending dispatch before closing chokidar so subscribers are guaranteed to see queued events.
+- `Layer.scoped` does not exist in this Effect 4.0 beta — use `Layer.effect(Tag, makeFn)` and rely on `Effect.addFinalizer` inside `makeFn` for shutdown drain. `Scope.extend` is replaced by `Scope.provide(scope)`. `Closeable` scope type is exported as `Scope.Closeable`.
+- chokidar's `awaitWriteFinish: { stabilityThreshold, pollInterval }` collapses fsync sequences (good for editors that write+truncate). Pair with `ignoreInitial: true` so we don't replay the whole vault on subscribe.
+- chokidar `ignored` regex `[/\/\.git\//, /\/\.atlas\//]` matches paths *containing* those segments — works for nested paths under those directories. Test asserts the option shape passed to chokidar; runtime ignoring is chokidar's responsibility.
+- macOS realpath caveat: `os.tmpdir()` returns `/var/folders/...` but realpath resolves to `/private/var/folders/...`. Tests must `await fs.realpath(root)` after creating the temp directory; the watcher itself calls `fileSystem.realPath` so emitted absolute paths must align with the resolved root.
+- `// @effect-diagnostics nodeBuiltinImport:off globalTimers:off` directive at top of file suppresses lints when intentionally using `node:timers` — established pattern (see `ThreadTabPersistence.ts:6`).
+- `observeRpcStream` in WS handler wraps `Stream.callback<VaultFileEvent>` + `Effect.acquireRelease(subscribe, unsubscribe)` — identical to `subscribeTerminalEvents`. `vault.subscribeFileEvents` RPC is added to `WS_METHODS` and `WsRpcGroup`.
+- Pre-existing typecheck errors in `apps/server/src/server.test.ts`, `bin.test.ts`, `SafeVaultWrite.ts` remain (T11 learnings already noted). My changes introduce 0 new typecheck errors and 0 new test failures (verified via stash + baseline run: 36 pre-existing failures in `server.test.ts` are identical with or without T9).
