@@ -47,6 +47,7 @@ import { ProviderRegistryLive } from "./provider/Layers/ProviderRegistry.ts";
 import { ServerSettingsLive } from "./serverSettings.ts";
 import { ProjectFaviconResolverLive } from "./project/Layers/ProjectFaviconResolver.ts";
 import { RepositoryIdentityResolverLive } from "./project/Layers/RepositoryIdentityResolver.ts";
+import { ProjectionProjectRepositoryLive } from "./persistence/Layers/ProjectionProjects.ts";
 import { ThreadTabPersistenceLive } from "./vault/ThreadTabPersistence.ts";
 import { VaultIndexLive } from "./vault/VaultIndex.ts";
 import { VaultReaderLive } from "./vault/VaultReader.ts";
@@ -256,7 +257,7 @@ const WorkspaceLayerLive = Layer.mergeAll(
   VaultIndexLayerLive,
   VaultVersionHistoryLayerLive,
   ThreadTabPersistenceLayerLive,
-);
+).pipe(Layer.provide(ProjectionProjectRepositoryLive));
 
 const AuthLayerLive = ServerAuthLive.pipe(
   Layer.provideMerge(PersistenceLayerLive),
