@@ -74,6 +74,10 @@ export interface WsRpcClient {
     readonly listEntries: RpcUnaryMethod<typeof WS_METHODS.vaultListEntries>;
     readonly readNote: RpcUnaryMethod<typeof WS_METHODS.vaultReadNote>;
     readonly writeNote: RpcUnaryMethod<typeof WS_METHODS.vaultWriteNote>;
+    readonly resolveBasename: RpcUnaryMethod<typeof WS_METHODS.vaultResolveBasename>;
+    readonly listTags: RpcUnaryMethod<typeof WS_METHODS.vaultListTags>;
+    readonly notesByTag: RpcUnaryMethod<typeof WS_METHODS.vaultNotesByTag>;
+    readonly search: RpcUnaryMethod<typeof WS_METHODS.vaultSearch>;
   };
   readonly filesystem: {
     readonly browse: RpcUnaryMethod<typeof WS_METHODS.filesystemBrowse>;
@@ -199,6 +203,12 @@ export function createWsRpcClient(transport: WsTransport): WsRpcClient {
         transport.request((client) => client[WS_METHODS.vaultListEntries](input)),
       readNote: (input) => transport.request((client) => client[WS_METHODS.vaultReadNote](input)),
       writeNote: (input) => transport.request((client) => client[WS_METHODS.vaultWriteNote](input)),
+      resolveBasename: (input) =>
+        transport.request((client) => client[WS_METHODS.vaultResolveBasename](input)),
+      listTags: (input) => transport.request((client) => client[WS_METHODS.vaultListTags](input)),
+      notesByTag: (input) =>
+        transport.request((client) => client[WS_METHODS.vaultNotesByTag](input)),
+      search: (input) => transport.request((client) => client[WS_METHODS.vaultSearch](input)),
     },
     filesystem: {
       browse: (input) => transport.request((client) => client[WS_METHODS.filesystemBrowse](input)),

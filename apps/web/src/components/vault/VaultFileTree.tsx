@@ -9,6 +9,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { readEnvironmentConnection } from "../../environments/runtime";
 import { cn } from "~/lib/utils";
+import { TagBrowser } from "./TagBrowser";
 
 interface VaultFileTreeProps {
   threadId: ThreadId;
@@ -127,37 +128,36 @@ export const VaultFileTree = memo(function VaultFileTree({
   const rootHasEntries = rootState?.status === "loaded" && rootState.entries.length > 0;
 
   return (
-    <div
-      role="tree"
-      aria-label="Vault files"
-      className="flex h-full min-h-0 flex-col overflow-y-auto border-l border-border bg-card/30 py-2"
-    >
-      <div className="flex items-center gap-1.5 px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Files
+    <div className="flex h-full min-h-0 w-full flex-col overflow-y-auto border-l border-border bg-card/30">
+      <div role="tree" aria-label="Vault files" className="flex flex-col py-2">
+        <div className="flex items-center gap-1.5 px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Files
+        </div>
+        {rootIsLoading && !rootState?.entries.length ? (
+          <div className="px-3 py-1.5 text-xs text-muted-foreground">Loading…</div>
+        ) : rootState?.status === "error" ? (
+          <div className="px-3 py-1.5 text-xs text-destructive">
+            {rootState.error ?? "Failed to load vault."}
+          </div>
+        ) : rootHasEntries ? (
+          <div className="flex flex-col">
+            {rootState.entries.map((entry) => (
+              <VaultEntryNode
+                key={entry.relativePath}
+                entry={entry}
+                depth={0}
+                expandedPaths={expandedPaths}
+                directoriesByPath={directoriesByPath}
+                onToggle={toggleDirectory}
+                onOpenNote={openNote}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="px-3 py-1.5 text-xs text-muted-foreground">No notes yet</div>
+        )}
       </div>
-      {rootIsLoading && !rootState?.entries.length ? (
-        <div className="px-3 py-1.5 text-xs text-muted-foreground">Loading…</div>
-      ) : rootState?.status === "error" ? (
-        <div className="px-3 py-1.5 text-xs text-destructive">
-          {rootState.error ?? "Failed to load vault."}
-        </div>
-      ) : rootHasEntries ? (
-        <div className="flex flex-col">
-          {rootState.entries.map((entry) => (
-            <VaultEntryNode
-              key={entry.relativePath}
-              entry={entry}
-              depth={0}
-              expandedPaths={expandedPaths}
-              directoriesByPath={directoriesByPath}
-              onToggle={toggleDirectory}
-              onOpenNote={openNote}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="px-3 py-1.5 text-xs text-muted-foreground">No notes yet</div>
-      )}
+      <TagBrowser threadId={threadId} environmentId={environmentId} projectId={projectId} />
     </div>
   );
 });

@@ -91,6 +91,10 @@
     "./markdown/wikilink": {
       "types": "./src/markdown/wikilink.ts",
       "import": "./src/markdown/wikilink.ts"
+    },
+    "./markdown/tag": {
+      "types": "./src/markdown/tag.ts",
+      "import": "./src/markdown/tag.ts"
     }
   },
   "scripts": {

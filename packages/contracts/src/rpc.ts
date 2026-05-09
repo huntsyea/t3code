@@ -69,12 +69,23 @@ import {
 } from "./project.ts";
 import {
   VaultFileEvent,
+  VaultIndexQueryError,
+  VaultIndexUpdate,
   VaultListEntriesInput,
   VaultListEntriesResult,
+  VaultListTagsInput,
+  VaultListTagsResult,
+  VaultNotesByTagInput,
+  VaultNotesByTagResult,
   VaultReaderError,
   VaultReadNoteInput,
   VaultReadNoteResult,
+  VaultResolveBasenameInput,
+  VaultResolveBasenameResult,
+  VaultSearchInput,
+  VaultSearchResult,
   VaultSubscribeFileEventsInput,
+  VaultSubscribeIndexUpdatesInput,
   VaultWatcherError,
   VaultWriteNoteInput,
   VaultWriteNoteResult,
@@ -132,7 +143,12 @@ export const WS_METHODS = {
   vaultReadNote: "vault.readNote",
   vaultListEntries: "vault.listEntries",
   vaultWriteNote: "vault.writeNote",
+  vaultResolveBasename: "vault.resolveBasename",
   vaultSubscribeFileEvents: "vault.subscribeFileEvents",
+  vaultListTags: "vault.listTags",
+  vaultNotesByTag: "vault.notesByTag",
+  vaultSearch: "vault.search",
+  vaultSubscribeIndexUpdates: "vault.subscribeIndexUpdates",
 
   // Shell methods
   shellOpenInEditor: "shell.openInEditor",
@@ -321,11 +337,41 @@ export const WsVaultWriteNoteRpc = Rpc.make(WS_METHODS.vaultWriteNote, {
   error: VaultWriterError,
 });
 
+export const WsVaultResolveBasenameRpc = Rpc.make(WS_METHODS.vaultResolveBasename, {
+  payload: VaultResolveBasenameInput,
+  success: VaultResolveBasenameResult,
+});
+
 export const WsVaultSubscribeFileEventsRpc = Rpc.make(WS_METHODS.vaultSubscribeFileEvents, {
   payload: VaultSubscribeFileEventsInput,
   success: VaultFileEvent,
   error: VaultWatcherError,
   stream: true,
+});
+
+export const WsVaultSubscribeIndexUpdatesRpc = Rpc.make(WS_METHODS.vaultSubscribeIndexUpdates, {
+  payload: VaultSubscribeIndexUpdatesInput,
+  success: VaultIndexUpdate,
+  error: VaultWatcherError,
+  stream: true,
+});
+
+export const WsVaultListTagsRpc = Rpc.make(WS_METHODS.vaultListTags, {
+  payload: VaultListTagsInput,
+  success: VaultListTagsResult,
+  error: VaultIndexQueryError,
+});
+
+export const WsVaultNotesByTagRpc = Rpc.make(WS_METHODS.vaultNotesByTag, {
+  payload: VaultNotesByTagInput,
+  success: VaultNotesByTagResult,
+  error: VaultIndexQueryError,
+});
+
+export const WsVaultSearchRpc = Rpc.make(WS_METHODS.vaultSearch, {
+  payload: VaultSearchInput,
+  success: VaultSearchResult,
+  error: VaultIndexQueryError,
 });
 
 export const WsShellOpenInEditorRpc = Rpc.make(WS_METHODS.shellOpenInEditor, {
@@ -554,7 +600,12 @@ export const WsRpcGroup = RpcGroup.make(
   WsVaultReadNoteRpc,
   WsVaultListEntriesRpc,
   WsVaultWriteNoteRpc,
+  WsVaultResolveBasenameRpc,
   WsVaultSubscribeFileEventsRpc,
+  WsVaultSubscribeIndexUpdatesRpc,
+  WsVaultListTagsRpc,
+  WsVaultNotesByTagRpc,
+  WsVaultSearchRpc,
   WsShellOpenInEditorRpc,
   WsFilesystemBrowseRpc,
   WsSubscribeVcsStatusRpc,

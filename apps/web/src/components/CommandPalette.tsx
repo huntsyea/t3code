@@ -24,6 +24,7 @@ import {
   LinkIcon,
   MessageSquareIcon,
   MessageSquarePlusIcon,
+  SearchIcon,
   SettingsIcon,
   SquarePenIcon,
 } from "lucide-react";
@@ -40,6 +41,7 @@ import {
 } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useCommandPaletteStore } from "../commandPaletteStore";
+import { useVaultSearchStore } from "../vaultSearchStore";
 import { openOrActivateChatTab } from "./vault/openChatTab";
 import { readEnvironmentApi } from "../environmentApi";
 import { readPrimaryEnvironmentDescriptor, usePrimaryEnvironmentId } from "../environments/primary";
@@ -1057,6 +1059,16 @@ function OpenCommandPaletteDialog() {
           threadId: vaultThreadId,
           ...(vaultThreadTitle ? { title: vaultThreadTitle } : {}),
         });
+      },
+    });
+    actionItems.push({
+      kind: "action",
+      value: "action:vault-search",
+      searchTerms: ["search vault", "find note", "search notes", "vault search"],
+      title: "Search vault",
+      icon: <SearchIcon className={ITEM_ICON_CLASS} />,
+      run: async () => {
+        useVaultSearchStore.getState().setOpen(true);
       },
     });
   }

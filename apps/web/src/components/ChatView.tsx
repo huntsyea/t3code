@@ -184,6 +184,8 @@ import { retainThreadDetailSubscription } from "../environments/runtime/service"
 import { RightPanelSheet } from "./RightPanelSheet";
 import { Button } from "./ui/button";
 import { VaultFileTree } from "./vault/VaultFileTree";
+import { VaultSearchPanel } from "./vault/VaultSearchPanel";
+import { useVaultSearchStore } from "../vaultSearchStore";
 import * as Schema from "effect/Schema";
 import {
   buildVersionMismatchDismissalKey,
@@ -713,6 +715,9 @@ export default function ChatView(props: ChatViewProps) {
   const onToggleFileTree = useCallback(() => {
     setFileTreeOpen((current) => !current);
   }, [setFileTreeOpen]);
+  const vaultSearchOpen = useVaultSearchStore((state) => state.open);
+  const setVaultSearchOpen = useVaultSearchStore((state) => state.setOpen);
+  const toggleVaultSearch = useVaultSearchStore((state) => state.toggleOpen);
   const shouldUsePlanSidebarSheet = useMediaQuery(RIGHT_PANEL_INLINE_LAYOUT_MEDIA_QUERY);
   // Tracks whether the user explicitly dismissed the sidebar for the active turn.
   const planSidebarDismissedForTurnRef = useRef<string | null>(null);
@@ -868,6 +873,25 @@ export default function ChatView(props: ChatViewProps) {
   const activeProject = useStore(
     useMemo(() => createProjectSelectorByRef(activeProjectRef), [activeProjectRef]),
   );
+
+  const isVaultProjectActive = activeProject?.kind === "vault";
+  useEffect(() => {
+    if (!isVaultProjectActive) return;
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+      if (!event.shiftKey) return;
+      const key = event.key.toLowerCase();
+      if (key !== "f") return;
+      const usesMeta = event.metaKey && !event.ctrlKey;
+      const usesCtrl = event.ctrlKey && !event.metaKey;
+      if (!usesMeta && !usesCtrl) return;
+      event.preventDefault();
+      event.stopPropagation();
+      toggleVaultSearch();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isVaultProjectActive, toggleVaultSearch]);
 
   useEffect(() => {
     if (routeKind !== "server") {
@@ -3745,6 +3769,16 @@ export default function ChatView(props: ChatViewProps) {
               projectId={activeProject.id}
             />
           </div>
+        ) : null}
+
+        {activeProject?.kind === "vault" && activeThread ? (
+          <VaultSearchPanel
+            open={vaultSearchOpen}
+            onOpenChange={setVaultSearchOpen}
+            threadId={activeThread.id}
+            environmentId={activeThread.environmentId}
+            projectId={activeProject.id}
+          />
         ) : null}
 
         {planSidebarOpen && !shouldUsePlanSidebarSheet ? (

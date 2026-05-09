@@ -26,6 +26,7 @@ import {
   ORCHESTRATION_WS_METHODS,
   ProjectSearchEntriesError,
   ProjectWriteFileError,
+  VaultIndexQueryError,
   OrchestrationReplayEventsError,
   FilesystemBrowseError,
   TABS_WS_METHODS,
@@ -33,6 +34,7 @@ import {
   ThreadId,
   type TerminalEvent,
   type VaultFileEvent,
+  type VaultIndexUpdate,
   WS_METHODS,
   WsRpcGroup,
 } from "@t3tools/contracts";
@@ -59,6 +61,8 @@ import { ServerRuntimeStartup } from "./serverRuntimeStartup.ts";
 import { redactServerSettingsForClient, ServerSettingsService } from "./serverSettings.ts";
 import { TerminalManager } from "./terminal/Services/Manager.ts";
 import { ThreadTabPersistence } from "./vault/ThreadTabPersistence.ts";
+import { VaultIndex } from "./vault/VaultIndex.ts";
+import { VaultIndexReactor } from "./orchestration/Services/VaultIndexReactor.ts";
 import { VaultReader } from "./vault/VaultReader.ts";
 import { VaultWatcher } from "./vault/VaultWatcher.ts";
 import { VaultWriter } from "./vault/VaultWriter.ts";
@@ -186,6 +190,8 @@ const makeWsRpcLayer = (currentSessionId: AuthSessionId) =>
       const vaultReader = yield* VaultReader;
       const vaultWatcher = yield* VaultWatcher;
       const vaultWriter = yield* VaultWriter;
+      const vaultIndex = yield* VaultIndex;
+      const vaultIndexReactor = yield* VaultIndexReactor;
       const threadTabPersistence = yield* ThreadTabPersistence;
       const projectSetupScriptRunner = yield* ProjectSetupScriptRunner;
       const repositoryIdentityResolver = yield* RepositoryIdentityResolver;
@@ -992,12 +998,82 @@ const makeWsRpcLayer = (currentSessionId: AuthSessionId) =>
           observeRpcEffect(WS_METHODS.vaultWriteNote, vaultWriter.writeNote(input), {
             "rpc.aggregate": "vault",
           }),
+        [WS_METHODS.vaultResolveBasename]: (input) =>
+          observeRpcEffect(
+            WS_METHODS.vaultResolveBasename,
+            vaultIndex.resolveBasename(input.projectId, input.basename).pipe(
+              Effect.map((matches) => ({ matches })),
+              Effect.orDie,
+            ),
+            { "rpc.aggregate": "vault" },
+          ),
+        [WS_METHODS.vaultListTags]: (input) =>
+          observeRpcEffect(
+            WS_METHODS.vaultListTags,
+            vaultIndex.listTags(input.projectId).pipe(
+              Effect.map((tags) => ({ tags })),
+              Effect.mapError(
+                (cause) =>
+                  new VaultIndexQueryError({
+                    code: "QUERY_FAILED",
+                    message: cause.message,
+                    cause,
+                  }),
+              ),
+            ),
+            { "rpc.aggregate": "vault" },
+          ),
+        [WS_METHODS.vaultNotesByTag]: (input) =>
+          observeRpcEffect(
+            WS_METHODS.vaultNotesByTag,
+            vaultIndex.notesByTag(input.projectId, input.tag).pipe(
+              Effect.map((notes) => ({ notes })),
+              Effect.mapError(
+                (cause) =>
+                  new VaultIndexQueryError({
+                    code: "QUERY_FAILED",
+                    message: cause.message,
+                    cause,
+                  }),
+              ),
+            ),
+            { "rpc.aggregate": "vault" },
+          ),
+        [WS_METHODS.vaultSearch]: (input) =>
+          observeRpcEffect(
+            WS_METHODS.vaultSearch,
+            vaultIndex.searchFTS(input.projectId, input.query, input.limit).pipe(
+              Effect.map((hits) => ({ hits })),
+              Effect.mapError(
+                (cause) =>
+                  new VaultIndexQueryError({
+                    code: "QUERY_FAILED",
+                    message: cause.message,
+                    cause,
+                  }),
+              ),
+            ),
+            { "rpc.aggregate": "vault" },
+          ),
         [WS_METHODS.vaultSubscribeFileEvents]: (input) =>
           observeRpcStream(
             WS_METHODS.vaultSubscribeFileEvents,
             Stream.callback<VaultFileEvent>((queue) =>
               Effect.acquireRelease(
                 vaultWatcher.subscribe(input.projectId, (event) => Queue.offer(queue, event)),
+                (unsubscribe) => Effect.sync(unsubscribe),
+              ),
+            ),
+            { "rpc.aggregate": "vault" },
+          ),
+        [WS_METHODS.vaultSubscribeIndexUpdates]: (input) =>
+          observeRpcStream(
+            WS_METHODS.vaultSubscribeIndexUpdates,
+            Stream.callback<VaultIndexUpdate>((queue) =>
+              Effect.acquireRelease(
+                vaultIndexReactor.subscribe(input.projectId, (update) =>
+                  Queue.offer(queue, update),
+                ),
                 (unsubscribe) => Effect.sync(unsubscribe),
               ),
             ),

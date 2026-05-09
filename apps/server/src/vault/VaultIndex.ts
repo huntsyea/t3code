@@ -42,6 +42,16 @@ export interface VaultIndexTagCount {
   readonly count: number;
 }
 
+export interface VaultIndexResolvedNote {
+  readonly relativePath: string;
+  readonly mtime: number;
+}
+
+export interface VaultIndexTaggedNote {
+  readonly relativePath: string;
+  readonly title: string | null;
+}
+
 export interface VaultIndexShape {
   readonly upsertNote: (
     vaultId: ProjectId,
@@ -77,9 +87,19 @@ export interface VaultIndexShape {
     targetBasename: string,
   ) => Effect.Effect<ReadonlyArray<string>, VaultIndexError>;
 
+  readonly resolveBasename: (
+    vaultId: ProjectId,
+    basename: string,
+  ) => Effect.Effect<ReadonlyArray<VaultIndexResolvedNote>, VaultIndexError>;
+
   readonly listTags: (
     vaultId: ProjectId,
   ) => Effect.Effect<ReadonlyArray<VaultIndexTagCount>, VaultIndexError>;
+
+  readonly notesByTag: (
+    vaultId: ProjectId,
+    tag: string,
+  ) => Effect.Effect<ReadonlyArray<VaultIndexTaggedNote>, VaultIndexError>;
 }
 
 export class VaultIndex extends Context.Service<VaultIndex, VaultIndexShape>()(
@@ -253,6 +273,23 @@ export const makeVaultIndex = Effect.gen(function* () {
       Effect.mapError(toError("VaultIndex.getBacklinks", "Failed to load backlinks")),
     );
 
+  const resolveBasename: VaultIndexShape["resolveBasename"] = (vaultId, basename) => {
+    const exact = `${basename}.md`;
+    const nestedSuffix = `%/${basename}.md`;
+    return sql<{ readonly relative_path: string; readonly mtime: number }>`
+      SELECT relative_path, mtime
+      FROM vault_notes
+      WHERE vault_id = ${vaultId}
+        AND (relative_path = ${exact} OR relative_path LIKE ${nestedSuffix})
+      ORDER BY mtime DESC, relative_path ASC
+    `.pipe(
+      Effect.map((rows) =>
+        rows.map((row) => ({ relativePath: row.relative_path, mtime: row.mtime })),
+      ),
+      Effect.mapError(toError("VaultIndex.resolveBasename", "Failed to resolve basename")),
+    );
+  };
+
   const listTags: VaultIndexShape["listTags"] = (vaultId) =>
     sql<{ readonly tag: string; readonly count: number }>`
       SELECT tag, COUNT(*) AS count
@@ -265,6 +302,21 @@ export const makeVaultIndex = Effect.gen(function* () {
       Effect.mapError(toError("VaultIndex.listTags", "Failed to list tags")),
     );
 
+  const notesByTag: VaultIndexShape["notesByTag"] = (vaultId, tag) =>
+    sql<{ readonly relative_path: string; readonly title: string | null }>`
+      SELECT DISTINCT t.source_path AS relative_path, n.title AS title
+      FROM vault_tags t
+      LEFT JOIN vault_notes n
+        ON n.vault_id = t.vault_id AND n.relative_path = t.source_path
+      WHERE t.vault_id = ${vaultId} AND t.tag = ${tag}
+      ORDER BY t.source_path ASC
+    `.pipe(
+      Effect.map((rows) =>
+        rows.map((row) => ({ relativePath: row.relative_path, title: row.title })),
+      ),
+      Effect.mapError(toError("VaultIndex.notesByTag", "Failed to list notes by tag")),
+    );
+
   return {
     upsertNote,
     deleteNote,
@@ -272,7 +324,9 @@ export const makeVaultIndex = Effect.gen(function* () {
     upsertTags,
     searchFTS,
     getBacklinks,
+    resolveBasename,
     listTags,
+    notesByTag,
   } satisfies VaultIndexShape;
 });
 

@@ -37,6 +37,7 @@ import * as GitManager from "./git/GitManager.ts";
 import { KeybindingsLive } from "./keybindings.ts";
 import { ServerRuntimeStartup, ServerRuntimeStartupLive } from "./serverRuntimeStartup.ts";
 import { OrchestrationReactorLive } from "./orchestration/Layers/OrchestrationReactor.ts";
+import { VaultIndexReactorLive } from "./orchestration/Layers/VaultIndexReactor.ts";
 import { RuntimeReceiptBusLive } from "./orchestration/Layers/RuntimeReceiptBus.ts";
 import { ProviderRuntimeIngestionLive } from "./orchestration/Layers/ProviderRuntimeIngestion.ts";
 import { ProviderCommandReactorLive } from "./orchestration/Layers/ProviderCommandReactor.ts";
@@ -47,6 +48,7 @@ import { ServerSettingsLive } from "./serverSettings.ts";
 import { ProjectFaviconResolverLive } from "./project/Layers/ProjectFaviconResolver.ts";
 import { RepositoryIdentityResolverLive } from "./project/Layers/RepositoryIdentityResolver.ts";
 import { ThreadTabPersistenceLive } from "./vault/ThreadTabPersistence.ts";
+import { VaultIndexLive } from "./vault/VaultIndex.ts";
 import { VaultReaderLive } from "./vault/VaultReader.ts";
 import { VaultWatcherLive } from "./vault/VaultWatcher.ts";
 import { VaultWriterLive } from "./vault/VaultWriter.ts";
@@ -148,6 +150,7 @@ const ReactorLayerLive = Layer.empty.pipe(
   Layer.provideMerge(ProviderCommandReactorLive),
   Layer.provideMerge(CheckpointReactorLive),
   Layer.provideMerge(ThreadDeletionReactorLive),
+  Layer.provideMerge(VaultIndexReactorLive),
   Layer.provideMerge(RuntimeReceiptBusLive),
 );
 
@@ -234,6 +237,8 @@ const ThreadTabPersistenceLayerLive = ThreadTabPersistenceLive.pipe(
   Layer.provide(SqlitePersistenceLayerLive),
 );
 
+const VaultIndexLayerLive = VaultIndexLive.pipe(Layer.provide(SqlitePersistenceLayerLive));
+
 const WorkspaceLayerLive = Layer.mergeAll(
   WorkspacePathsLive,
   WorkspaceEntriesLayerLive,
@@ -241,6 +246,7 @@ const WorkspaceLayerLive = Layer.mergeAll(
   VaultReaderLayerLive,
   VaultWatcherLive,
   VaultWriterLive,
+  VaultIndexLayerLive,
   ThreadTabPersistenceLayerLive,
 );
 

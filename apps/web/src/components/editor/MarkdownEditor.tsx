@@ -23,6 +23,8 @@ import { readEnvironmentConnection } from "../../environments/runtime";
 import { cn } from "~/lib/utils";
 import { toastManager } from "../ui/toast";
 import { livePreviewExtensions } from "./livePreview";
+import { wikilinkAutocomplete } from "./wikilinkAutocomplete";
+import { wikilinkNavigate, wikilinkNavigateTheme } from "./wikilinkNavigate";
 
 const AUTOSAVE_DEBOUNCE_MS = 2000;
 
@@ -259,6 +261,71 @@ export function MarkdownEditor({
       }
     });
 
+    const wikilinkAutocompleteExtension = connection
+      ? wikilinkAutocomplete({
+          loadBasenames: async () => {
+            const result = await connection.client.vault.listEntries({
+              projectId,
+              relativeDir: "",
+            });
+            return result.entries
+              .filter((entry) => entry.kind === "file" && entry.name.toLowerCase().endsWith(".md"))
+              .map((entry) => entry.name.slice(0, -".md".length));
+          },
+        })
+      : null;
+
+    const wikilinkNavigateExtension = connection
+      ? wikilinkNavigate({
+          resolveBasename: async (basename) => {
+            const result = await connection.client.vault.resolveBasename({
+              projectId,
+              basename,
+            });
+            const first = result.matches[0];
+            if (!first) {
+              return { basename, status: "broken", relativePath: null };
+            }
+            if (result.matches.length > 1) {
+              toastManager.add({
+                type: "info",
+                title: `Multiple notes named ${basename}`,
+                description: `Opened most recent: ${first.relativePath}`,
+              });
+            }
+            return { basename, status: "resolved", relativePath: first.relativePath };
+          },
+          openNote: async ({ relativePath: targetRelativePath }) => {
+            await connection.client.tabs.openNoteTab({
+              threadId,
+              vaultId: projectId,
+              relativePath: targetRelativePath,
+            });
+          },
+          createNote: async (basename) => {
+            const confirmed =
+              typeof window === "undefined" ? false : window.confirm(`Create note "${basename}"?`);
+            if (!confirmed) return null;
+            const targetRelativePath = `${basename}.md`;
+            try {
+              await connection.client.vault.writeNote({
+                projectId,
+                relativePath: targetRelativePath,
+                content: "",
+              });
+              return targetRelativePath;
+            } catch (error) {
+              toastManager.add({
+                type: "error",
+                title: "Failed to create note",
+                description: formatErrorMessage(error, "Unknown error."),
+              });
+              return null;
+            }
+          },
+        })
+      : null;
+
     const state = EditorState.create({
       doc: loadState.initialContent,
       extensions: [
@@ -273,6 +340,8 @@ export function MarkdownEditor({
         EditorView.lineWrapping,
         markdown(),
         ...livePreviewExtensions,
+        ...(wikilinkNavigateExtension ? [wikilinkNavigateExtension, wikilinkNavigateTheme] : []),
+        ...(wikilinkAutocompleteExtension ? [wikilinkAutocompleteExtension] : []),
         editorTheme,
         saveKeymap,
         keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
