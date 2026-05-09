@@ -48,6 +48,16 @@ import {
   OrchestrationReplayEventsInput,
   OrchestrationRpcSchemas,
 } from "./orchestration.ts";
+import {
+  TABS_WS_METHODS,
+  WsTabsActivateTabRpc,
+  WsTabsCloseTabRpc,
+  WsTabsGetThreadStateRpc,
+  WsTabsOpenNoteTabRpc,
+  WsTabsReorderTabsRpc,
+  WsTabsSetThreadStateRpc,
+  WsTabsSubscribeThreadStateRpc,
+} from "./tabs.ts";
 import { ProviderInstanceId } from "./providerInstance.ts";
 import {
   ProjectSearchEntriesError,
@@ -158,6 +168,15 @@ export const WS_METHODS = {
   subscribeServerConfig: "subscribeServerConfig",
   subscribeServerLifecycle: "subscribeServerLifecycle",
   subscribeAuthAccess: "subscribeAuthAccess",
+
+  // Tabs methods
+  tabsGetThreadState: TABS_WS_METHODS.getThreadState,
+  tabsSetThreadState: TABS_WS_METHODS.setThreadState,
+  tabsOpenNoteTab: TABS_WS_METHODS.openNoteTab,
+  tabsCloseTab: TABS_WS_METHODS.closeTab,
+  tabsActivateTab: TABS_WS_METHODS.activateTab,
+  tabsReorderTabs: TABS_WS_METHODS.reorderTabs,
+  tabsSubscribeThreadState: TABS_WS_METHODS.subscribeThreadState,
 } as const;
 
 export const WsServerUpsertKeybindingRpc = Rpc.make(WS_METHODS.serverUpsertKeybinding, {
@@ -461,6 +480,16 @@ export const WsSubscribeAuthAccessRpc = Rpc.make(WS_METHODS.subscribeAuthAccess,
   stream: true,
 });
 
+export {
+  WsTabsActivateTabRpc,
+  WsTabsCloseTabRpc,
+  WsTabsGetThreadStateRpc,
+  WsTabsOpenNoteTabRpc,
+  WsTabsReorderTabsRpc,
+  WsTabsSetThreadStateRpc,
+  WsTabsSubscribeThreadStateRpc,
+};
+
 export const WsRpcGroup = RpcGroup.make(
   WsServerGetConfigRpc,
   WsServerRefreshProvidersRpc,
@@ -502,6 +531,13 @@ export const WsRpcGroup = RpcGroup.make(
   WsSubscribeServerConfigRpc,
   WsSubscribeServerLifecycleRpc,
   WsSubscribeAuthAccessRpc,
+  WsTabsGetThreadStateRpc,
+  WsTabsSetThreadStateRpc,
+  WsTabsOpenNoteTabRpc,
+  WsTabsCloseTabRpc,
+  WsTabsActivateTabRpc,
+  WsTabsReorderTabsRpc,
+  WsTabsSubscribeThreadStateRpc,
   WsOrchestrationDispatchCommandRpc,
   WsOrchestrationGetTurnDiffRpc,
   WsOrchestrationGetFullThreadDiffRpc,
