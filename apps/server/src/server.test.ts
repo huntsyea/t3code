@@ -116,6 +116,14 @@ import { ServerSecretStoreLive } from "./auth/Layers/ServerSecretStore.ts";
 import { ServerAuthLive } from "./auth/Layers/ServerAuth.ts";
 import * as ProcessDiagnostics from "./diagnostics/ProcessDiagnostics.ts";
 import * as TraceDiagnostics from "./diagnostics/TraceDiagnostics.ts";
+import { ThreadTabPersistence } from "./vault/ThreadTabPersistence.ts";
+import { VaultIndex } from "./vault/VaultIndex.ts";
+import { VaultReader } from "./vault/VaultReader.ts";
+import { VaultRename } from "./vault/VaultRename.ts";
+import { VaultVersionHistory } from "./vault/VaultVersionHistory.ts";
+import { VaultWatcher } from "./vault/VaultWatcher.ts";
+import { VaultWriter } from "./vault/VaultWriter.ts";
+import { VaultIndexReactor } from "./orchestration/Services/VaultIndexReactor.ts";
 import * as Data from "effect/Data";
 
 const defaultProjectId = ProjectId.make("project-default");
@@ -670,6 +678,14 @@ const buildAppUnderTest = (options?: {
     );
 
     const appLayer = servedRoutesLayer.pipe(
+      Layer.provide(Layer.mock(VaultReader)({})),
+      Layer.provide(Layer.mock(VaultWriter)({})),
+      Layer.provide(Layer.mock(VaultRename)({})),
+      Layer.provide(Layer.mock(VaultVersionHistory)({})),
+      Layer.provide(Layer.mock(VaultWatcher)({})),
+      Layer.provide(Layer.mock(VaultIndex)({})),
+      Layer.provide(Layer.mock(VaultIndexReactor)({})),
+      Layer.provide(Layer.mock(ThreadTabPersistence)({})),
       Layer.provide(
         Layer.mock(BrowserTraceCollector)({
           record: () => Effect.void,

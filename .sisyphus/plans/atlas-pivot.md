@@ -39,11 +39,11 @@
 
 ### PHASE 3 — Rebrand to Atlas
 
-- [ ] **T27. Rebrand UI strings + app menus**
-- [ ] **T28. Rebrand custom protocol scheme + electron-updater channels**
-- [ ] **T29. userDataDirName + first-launch data migration prompt**
-- [ ] **T30. Rebrand marketing site**
-- [ ] **T31. oxlint plugin + packaging identifiers + README**
+- [x] **T27. Rebrand UI strings + app menus**
+- [x] **T28. Rebrand custom protocol scheme + electron-updater channels**
+- [x] **T29. userDataDirName + first-launch data migration prompt**
+- [x] **T30. Rebrand marketing site**
+- [x] **T31. oxlint plugin + packaging identifiers + README**
 
 ### Final Verification Wave
 

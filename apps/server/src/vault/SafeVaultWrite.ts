@@ -1,5 +1,8 @@
+// @effect-diagnostics nodeBuiltinImport:off
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
@@ -7,8 +10,9 @@ import * as path from "node:path";
 import { writeFileStringAtomically as atomicWrite } from "../atomicWrite.ts";
 
 export class SafeVaultWriteError extends Data.TaggedError("SafeVaultWriteError")<{
-  readonly code: "PATH_ESCAPE" | "PATH_INVALID";
+  readonly code: "PATH_ESCAPE" | "PATH_INVALID" | "WRITE_FAILED";
   readonly path: string;
+  readonly cause?: unknown;
 }> {}
 
 function normalizeRelativePath(input: string): string | null {
@@ -77,7 +81,7 @@ export const safeVaultWrite = (
   vaultRoot: string,
   relativePath: string,
   content: string | Uint8Array,
-): Effect.Effect<void, SafeVaultWriteError> =>
+): Effect.Effect<void, SafeVaultWriteError, FileSystem.FileSystem | Path.Path> =>
   Effect.gen(function* () {
     const normalizedRelativePath = normalizeRelativePath(relativePath);
     if (!normalizedRelativePath) {
@@ -119,5 +123,14 @@ export const safeVaultWrite = (
     return yield* atomicWrite({
       filePath: resolvedPath,
       contents: atomicWriteContent,
-    });
+    }).pipe(
+      Effect.mapError(
+        (cause) =>
+          new SafeVaultWriteError({
+            code: "WRITE_FAILED",
+            path: relativePath,
+            cause,
+          }),
+      ),
+    );
   });

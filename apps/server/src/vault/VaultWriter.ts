@@ -89,6 +89,8 @@ export const makeVaultWriter = Effect.gen(function* () {
 
       yield* safeVaultWrite(vaultRoot, input.relativePath, input.content).pipe(
         Effect.mapError(fromSafeVaultWriteError),
+        Effect.provideService(FileSystem.FileSystem, fileSystem),
+        Effect.provideService(Path.Path, path),
       );
 
       const resolvedRoot = yield* fileSystem.realPath(path.resolve(vaultRoot)).pipe(

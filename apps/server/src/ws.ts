@@ -1149,7 +1149,9 @@ const makeWsRpcLayer = (currentSessionId: AuthSessionId) =>
             WS_METHODS.vaultSubscribeFileEvents,
             Stream.callback<VaultFileEvent>((queue) =>
               Effect.acquireRelease(
-                vaultWatcher.subscribe(input.projectId, (event) => Queue.offer(queue, event)),
+                vaultWatcher
+                  .subscribe(input.projectId, (event) => Queue.offer(queue, event))
+                  .pipe(Effect.orDie),
                 (unsubscribe) => Effect.sync(unsubscribe),
               ),
             ),
@@ -1160,9 +1162,9 @@ const makeWsRpcLayer = (currentSessionId: AuthSessionId) =>
             WS_METHODS.vaultSubscribeIndexUpdates,
             Stream.callback<VaultIndexUpdate>((queue) =>
               Effect.acquireRelease(
-                vaultIndexReactor.subscribe(input.projectId, (update) =>
-                  Queue.offer(queue, update),
-                ),
+                vaultIndexReactor
+                  .subscribe(input.projectId, (update) => Queue.offer(queue, update))
+                  .pipe(Effect.orDie),
                 (unsubscribe) => Effect.sync(unsubscribe),
               ),
             ),

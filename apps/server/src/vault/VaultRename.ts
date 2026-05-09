@@ -4,8 +4,10 @@ import * as path from "node:path";
 
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as EffectFileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import * as EffectPath from "effect/Path";
 
 import {
   ProjectId,
@@ -264,7 +266,7 @@ const rewriteSourceFile = (
   sourceRelative: string,
   oldBasename: string,
   newBasename: string,
-): Effect.Effect<boolean, VaultRenameError> =>
+): Effect.Effect<boolean, VaultRenameError, EffectFileSystem.FileSystem | EffectPath.Path> =>
   Effect.gen(function* () {
     const sourceAbs = path.resolve(resolvedRoot, sourceRelative);
     const realpathResult = yield* Effect.tryPromise({
@@ -312,6 +314,8 @@ const rewriteSourceFile = (
 export const makeVaultRename = Effect.gen(function* () {
   const projects = yield* ProjectionProjectRepository;
   const vaultIndex = yield* VaultIndex;
+  const fileSystem = yield* EffectFileSystem.FileSystem;
+  const pathService = yield* EffectPath.Path;
 
   const loadVaultRoot = (projectId: ProjectId): Effect.Effect<string, VaultRenameError> =>
     projects.getById({ projectId }).pipe(
@@ -387,6 +391,9 @@ export const makeVaultRename = Effect.gen(function* () {
           sourceRelative,
           oldBasename,
           newBasename,
+        ).pipe(
+          Effect.provideService(EffectFileSystem.FileSystem, fileSystem),
+          Effect.provideService(EffectPath.Path, pathService),
         );
         if (changed) rewritten += 1;
       }

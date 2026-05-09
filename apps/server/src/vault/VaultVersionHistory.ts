@@ -4,8 +4,10 @@ import * as path from "node:path";
 
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as EffectFileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import * as EffectPath from "effect/Path";
 
 import {
   type ProjectId,
@@ -188,6 +190,8 @@ const parseRevisions = (
 
 export const makeVaultVersionHistory = Effect.gen(function* () {
   const projects = yield* ProjectionProjectRepository;
+  const fileSystem = yield* EffectFileSystem.FileSystem;
+  const pathService = yield* EffectPath.Path;
 
   const loadVaultRoot = (projectId: ProjectId): Effect.Effect<string, VaultVersionHistoryError> =>
     projects.getById({ projectId }).pipe(
@@ -303,6 +307,8 @@ export const makeVaultVersionHistory = Effect.gen(function* () {
 
     yield* safeVaultWrite(resolvedRoot, relativePosix, showResult.stdout).pipe(
       Effect.mapError(fromSafeVaultWriteError),
+      Effect.provideService(EffectFileSystem.FileSystem, fileSystem),
+      Effect.provideService(EffectPath.Path, pathService),
     );
 
     // TODO(plan-19): migrate to VcsDriver.

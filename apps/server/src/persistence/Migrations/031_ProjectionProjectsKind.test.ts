@@ -21,6 +21,7 @@ layer("031_ProjectionProjectsKind", (it) => {
         readonly type: string;
         readonly notnull: number;
         readonly dflt_value: string | null;
+        readonly pk: number;
       }>`
         PRAGMA table_info(projection_projects)
       `;
