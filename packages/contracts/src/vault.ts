@@ -92,6 +92,40 @@ export class VaultWriterError extends Schema.TaggedErrorClass<VaultWriterError>(
   },
 ) {}
 
+export const VaultRenameNoteInput = Schema.Struct({
+  projectId: ProjectId,
+  oldRelativePath: TrimmedNonEmptyString.check(Schema.isMaxLength(VAULT_PATH_MAX_LENGTH)),
+  newRelativePath: TrimmedNonEmptyString.check(Schema.isMaxLength(VAULT_PATH_MAX_LENGTH)),
+});
+export type VaultRenameNoteInput = typeof VaultRenameNoteInput.Type;
+
+export const VaultRenameNoteResult = Schema.Struct({
+  /** Number of source files whose wikilinks were rewritten as part of the rename. */
+  rewrittenSources: NonNegativeInt,
+});
+export type VaultRenameNoteResult = typeof VaultRenameNoteResult.Type;
+
+export const VaultRenameErrorCode = Schema.Literals([
+  "PROJECT_NOT_FOUND",
+  "KIND_MISMATCH",
+  "PATH_ESCAPE",
+  "PATH_INVALID",
+  "NOT_FOUND",
+  "ALREADY_EXISTS",
+  "RENAME_FAILED",
+  "REWRITE_FAILED",
+]);
+export type VaultRenameErrorCode = typeof VaultRenameErrorCode.Type;
+
+export class VaultRenameError extends Schema.TaggedErrorClass<VaultRenameError>()(
+  "VaultRenameError",
+  {
+    code: VaultRenameErrorCode,
+    message: TrimmedNonEmptyString,
+    cause: Schema.optional(Schema.Defect),
+  },
+) {}
+
 export const VaultResolveBasenameInput = Schema.Struct({
   projectId: ProjectId,
   basename: TrimmedNonEmptyString.check(Schema.isMaxLength(VAULT_PATH_MAX_LENGTH)),
@@ -257,3 +291,27 @@ export const VaultSearchResult = Schema.Struct({
   hits: Schema.Array(VaultSearchHit),
 });
 export type VaultSearchResult = typeof VaultSearchResult.Type;
+
+export const VaultGetBacklinksInput = Schema.Struct({
+  projectId: ProjectId,
+  /**
+   * Basename of the target note (without `.md` extension). Backlinks are
+   * stored against the wikilink target basename, not the full relative path.
+   */
+  targetBasename: TrimmedNonEmptyString.check(Schema.isMaxLength(VAULT_PATH_MAX_LENGTH)),
+});
+export type VaultGetBacklinksInput = typeof VaultGetBacklinksInput.Type;
+
+export const VaultBacklink = Schema.Struct({
+  /**
+   * POSIX-style relative path of the source note (the note containing the
+   * `[[targetBasename]]` wikilink).
+   */
+  sourcePath: TrimmedNonEmptyString,
+});
+export type VaultBacklink = typeof VaultBacklink.Type;
+
+export const VaultGetBacklinksResult = Schema.Struct({
+  backlinks: Schema.Array(VaultBacklink),
+});
+export type VaultGetBacklinksResult = typeof VaultGetBacklinksResult.Type;

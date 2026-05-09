@@ -74,10 +74,15 @@ export interface WsRpcClient {
     readonly listEntries: RpcUnaryMethod<typeof WS_METHODS.vaultListEntries>;
     readonly readNote: RpcUnaryMethod<typeof WS_METHODS.vaultReadNote>;
     readonly writeNote: RpcUnaryMethod<typeof WS_METHODS.vaultWriteNote>;
+    readonly renameNote: RpcUnaryMethod<typeof WS_METHODS.vaultRenameNote>;
     readonly resolveBasename: RpcUnaryMethod<typeof WS_METHODS.vaultResolveBasename>;
     readonly listTags: RpcUnaryMethod<typeof WS_METHODS.vaultListTags>;
     readonly notesByTag: RpcUnaryMethod<typeof WS_METHODS.vaultNotesByTag>;
     readonly search: RpcUnaryMethod<typeof WS_METHODS.vaultSearch>;
+    readonly getBacklinks: RpcUnaryMethod<typeof WS_METHODS.vaultGetBacklinks>;
+    readonly subscribeIndexUpdates: RpcInputStreamMethod<
+      typeof WS_METHODS.vaultSubscribeIndexUpdates
+    >;
   };
   readonly filesystem: {
     readonly browse: RpcUnaryMethod<typeof WS_METHODS.filesystemBrowse>;
@@ -203,12 +208,22 @@ export function createWsRpcClient(transport: WsTransport): WsRpcClient {
         transport.request((client) => client[WS_METHODS.vaultListEntries](input)),
       readNote: (input) => transport.request((client) => client[WS_METHODS.vaultReadNote](input)),
       writeNote: (input) => transport.request((client) => client[WS_METHODS.vaultWriteNote](input)),
+      renameNote: (input) =>
+        transport.request((client) => client[WS_METHODS.vaultRenameNote](input)),
       resolveBasename: (input) =>
         transport.request((client) => client[WS_METHODS.vaultResolveBasename](input)),
       listTags: (input) => transport.request((client) => client[WS_METHODS.vaultListTags](input)),
       notesByTag: (input) =>
         transport.request((client) => client[WS_METHODS.vaultNotesByTag](input)),
       search: (input) => transport.request((client) => client[WS_METHODS.vaultSearch](input)),
+      getBacklinks: (input) =>
+        transport.request((client) => client[WS_METHODS.vaultGetBacklinks](input)),
+      subscribeIndexUpdates: (input, listener, options) =>
+        transport.subscribe(
+          (client) => client[WS_METHODS.vaultSubscribeIndexUpdates](input),
+          listener,
+          { ...options, tag: WS_METHODS.vaultSubscribeIndexUpdates },
+        ),
     },
     filesystem: {
       browse: (input) => transport.request((client) => client[WS_METHODS.filesystemBrowse](input)),

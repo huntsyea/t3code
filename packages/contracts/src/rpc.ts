@@ -80,8 +80,13 @@ import {
   VaultReaderError,
   VaultReadNoteInput,
   VaultReadNoteResult,
+  VaultRenameError,
+  VaultRenameNoteInput,
+  VaultRenameNoteResult,
   VaultResolveBasenameInput,
   VaultResolveBasenameResult,
+  VaultGetBacklinksInput,
+  VaultGetBacklinksResult,
   VaultSearchInput,
   VaultSearchResult,
   VaultSubscribeFileEventsInput,
@@ -143,11 +148,13 @@ export const WS_METHODS = {
   vaultReadNote: "vault.readNote",
   vaultListEntries: "vault.listEntries",
   vaultWriteNote: "vault.writeNote",
+  vaultRenameNote: "vault.renameNote",
   vaultResolveBasename: "vault.resolveBasename",
   vaultSubscribeFileEvents: "vault.subscribeFileEvents",
   vaultListTags: "vault.listTags",
   vaultNotesByTag: "vault.notesByTag",
   vaultSearch: "vault.search",
+  vaultGetBacklinks: "vault.getBacklinks",
   vaultSubscribeIndexUpdates: "vault.subscribeIndexUpdates",
 
   // Shell methods
@@ -337,6 +344,12 @@ export const WsVaultWriteNoteRpc = Rpc.make(WS_METHODS.vaultWriteNote, {
   error: VaultWriterError,
 });
 
+export const WsVaultRenameNoteRpc = Rpc.make(WS_METHODS.vaultRenameNote, {
+  payload: VaultRenameNoteInput,
+  success: VaultRenameNoteResult,
+  error: VaultRenameError,
+});
+
 export const WsVaultResolveBasenameRpc = Rpc.make(WS_METHODS.vaultResolveBasename, {
   payload: VaultResolveBasenameInput,
   success: VaultResolveBasenameResult,
@@ -371,6 +384,12 @@ export const WsVaultNotesByTagRpc = Rpc.make(WS_METHODS.vaultNotesByTag, {
 export const WsVaultSearchRpc = Rpc.make(WS_METHODS.vaultSearch, {
   payload: VaultSearchInput,
   success: VaultSearchResult,
+  error: VaultIndexQueryError,
+});
+
+export const WsVaultGetBacklinksRpc = Rpc.make(WS_METHODS.vaultGetBacklinks, {
+  payload: VaultGetBacklinksInput,
+  success: VaultGetBacklinksResult,
   error: VaultIndexQueryError,
 });
 
@@ -600,12 +619,14 @@ export const WsRpcGroup = RpcGroup.make(
   WsVaultReadNoteRpc,
   WsVaultListEntriesRpc,
   WsVaultWriteNoteRpc,
+  WsVaultRenameNoteRpc,
   WsVaultResolveBasenameRpc,
   WsVaultSubscribeFileEventsRpc,
   WsVaultSubscribeIndexUpdatesRpc,
   WsVaultListTagsRpc,
   WsVaultNotesByTagRpc,
   WsVaultSearchRpc,
+  WsVaultGetBacklinksRpc,
   WsShellOpenInEditorRpc,
   WsFilesystemBrowseRpc,
   WsSubscribeVcsStatusRpc,

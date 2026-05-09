@@ -50,6 +50,7 @@ import { RepositoryIdentityResolverLive } from "./project/Layers/RepositoryIdent
 import { ThreadTabPersistenceLive } from "./vault/ThreadTabPersistence.ts";
 import { VaultIndexLive } from "./vault/VaultIndex.ts";
 import { VaultReaderLive } from "./vault/VaultReader.ts";
+import { VaultRenameLive } from "./vault/VaultRename.ts";
 import { VaultWatcherLive } from "./vault/VaultWatcher.ts";
 import { VaultWriterLive } from "./vault/VaultWriter.ts";
 import { WorkspaceEntriesLive } from "./workspace/Layers/WorkspaceEntries.ts";
@@ -239,6 +240,8 @@ const ThreadTabPersistenceLayerLive = ThreadTabPersistenceLive.pipe(
 
 const VaultIndexLayerLive = VaultIndexLive.pipe(Layer.provide(SqlitePersistenceLayerLive));
 
+const VaultRenameLayerLive = VaultRenameLive.pipe(Layer.provide(VaultIndexLayerLive));
+
 const WorkspaceLayerLive = Layer.mergeAll(
   WorkspacePathsLive,
   WorkspaceEntriesLayerLive,
@@ -246,6 +249,7 @@ const WorkspaceLayerLive = Layer.mergeAll(
   VaultReaderLayerLive,
   VaultWatcherLive,
   VaultWriterLive,
+  VaultRenameLayerLive,
   VaultIndexLayerLive,
   ThreadTabPersistenceLayerLive,
 );

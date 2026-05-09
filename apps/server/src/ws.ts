@@ -64,6 +64,7 @@ import { ThreadTabPersistence } from "./vault/ThreadTabPersistence.ts";
 import { VaultIndex } from "./vault/VaultIndex.ts";
 import { VaultIndexReactor } from "./orchestration/Services/VaultIndexReactor.ts";
 import { VaultReader } from "./vault/VaultReader.ts";
+import { VaultRename } from "./vault/VaultRename.ts";
 import { VaultWatcher } from "./vault/VaultWatcher.ts";
 import { VaultWriter } from "./vault/VaultWriter.ts";
 import { WorkspaceEntries } from "./workspace/Services/WorkspaceEntries.ts";
@@ -188,6 +189,7 @@ const makeWsRpcLayer = (currentSessionId: AuthSessionId) =>
       const workspaceEntries = yield* WorkspaceEntries;
       const workspaceFileSystem = yield* WorkspaceFileSystem;
       const vaultReader = yield* VaultReader;
+      const vaultRename = yield* VaultRename;
       const vaultWatcher = yield* VaultWatcher;
       const vaultWriter = yield* VaultWriter;
       const vaultIndex = yield* VaultIndex;
@@ -998,6 +1000,10 @@ const makeWsRpcLayer = (currentSessionId: AuthSessionId) =>
           observeRpcEffect(WS_METHODS.vaultWriteNote, vaultWriter.writeNote(input), {
             "rpc.aggregate": "vault",
           }),
+        [WS_METHODS.vaultRenameNote]: (input) =>
+          observeRpcEffect(WS_METHODS.vaultRenameNote, vaultRename.renameNote(input), {
+            "rpc.aggregate": "vault",
+          }),
         [WS_METHODS.vaultResolveBasename]: (input) =>
           observeRpcEffect(
             WS_METHODS.vaultResolveBasename,
@@ -1044,6 +1050,24 @@ const makeWsRpcLayer = (currentSessionId: AuthSessionId) =>
             WS_METHODS.vaultSearch,
             vaultIndex.searchFTS(input.projectId, input.query, input.limit).pipe(
               Effect.map((hits) => ({ hits })),
+              Effect.mapError(
+                (cause) =>
+                  new VaultIndexQueryError({
+                    code: "QUERY_FAILED",
+                    message: cause.message,
+                    cause,
+                  }),
+              ),
+            ),
+            { "rpc.aggregate": "vault" },
+          ),
+        [WS_METHODS.vaultGetBacklinks]: (input) =>
+          observeRpcEffect(
+            WS_METHODS.vaultGetBacklinks,
+            vaultIndex.getBacklinks(input.projectId, input.targetBasename).pipe(
+              Effect.map((sources) => ({
+                backlinks: sources.map((sourcePath) => ({ sourcePath })),
+              })),
               Effect.mapError(
                 (cause) =>
                   new VaultIndexQueryError({
