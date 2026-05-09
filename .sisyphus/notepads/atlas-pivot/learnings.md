@@ -68,3 +68,22 @@
 - A11y: `role="tablist"` on container, `role="tab"` on each tab, `aria-selected`, `tabIndex` managed (0 for active, -1 for inactive), Left/Right arrow focus navigation, Enter/Space to activate, ⌘W/Ctrl+W to close active.
 - Close button visibility: always `opacity-100` on active tab, `opacity-0 group-hover/tab:opacity-100` on inactive tabs (appears on hover).
 - Vitest config: `vitest run --passWithNoTests` — tests run via `bun run test`. Browser tests use separate config `vitest.browser.config.ts`.
+
+## Task 7 — VaultFileTree right-side panel + ChatHeader toggle
+
+- Vault RPCs (`vault.listEntries` / `vault.readNote`) were defined in `packages/contracts/src/rpc.ts` and registered in `WsRpcGroup`, but the `WsRpcClient` interface did not yet expose a `vault` namespace. Added one mirroring `projects` (request-only, no streams) so web can call `connection.client.vault.listEntries({ projectId, relativeDir })`.
+- Lazy-load discipline: root entries fetch in a single `useEffect` keyed by `projectId`. Each directory expansion fetches its own children only when first opened — `directoriesByPath` records `loading | loaded | error` per path so re-expansion does not refetch. An in-flight `Set` ref prevents duplicate concurrent loads.
+- Hooks rules: `useMemo` (`useMemoizedEntries`) must be called unconditionally. Resolve `childState` for every entry node (even files, where it is `undefined`) before the `kind === "dir"` branch.
+- ChatHeader pattern: new toolbar buttons follow the existing `Tooltip` + `TooltipTrigger render={<Toggle .../>}` shape. Match `variant="outline" size="xs"` and `className="shrink-0"` for consistent sizing. Vault-only visibility flows in as a `showFileTreeToggle` boolean prop derived from `activeProject?.kind === "vault"`, so ChatHeader stays unaware of store shape.
+- LocalStorage: existing `useLocalStorage(key, initial, schema)` hook accepts an Effect `Schema.Codec`. For a plain boolean toggle, `Schema.Boolean` is sufficient. Key namespacing for Atlas pivot: `atlas.fileTreeOpen`.
+- Right-panel layout: chat column uses `flex-1`, the vault tree sits adjacent with `w-72 shrink-0` and renders before the existing `PlanSidebar` slot. Hidden below `lg` breakpoint via `hidden lg:flex` to avoid crowding small viewports — mobile users open notes via tabs instead.
+- Keyboard navigation: tree items are buttons with `tabIndex=0`; Arrow Up/Down cycles focus across visible buttons inside the `[role="tree"]` container, Arrow Right expands a collapsed dir, Arrow Left collapses an expanded dir, Enter/Space activates (toggle for dirs, open-tab for `.md` files).
+- Pre-existing typecheck failures in `apps/server/src/{bin,server}.test.ts`, `vault/SafeVaultWrite.ts`, and `persistence/Migrations/031_ProjectionProjectsKind.test.ts` are inherited from prior tasks (T1–T6) and out of scope for this task; my changes introduce zero new TS errors in web/contracts.
+
+## Task 8 — EmptyWorkspace + "Open chat tab" command
+
+- Server-side `defaultThreadTabState` in `apps/server/src/vault/ThreadTabPersistence.ts:79-89` always seeds a chat tab on first read. Zero-tabs only happens after the user explicitly closes the chat tab (and any notes). EmptyWorkspace must therefore be triggered by tab-state subscription, not by a "first load" flag.
+- No `tabs.openChatTab` RPC exists. The chat-tab invariant (`ChatTab.id === ThreadId`, see `packages/contracts/src/tabs.ts:19-24`) means re-opening a chat tab is purely a client-side compose: read state, prepend a `{ kind: "chat", id: threadId, title }` entry, set active, and call `tabs.setThreadState`. Helper extracted to `apps/web/src/components/vault/openChatTab.ts` so both EmptyWorkspace and CommandPalette share the same path.
+- Web `Project.kind` is typed as optional (`"code" | "vault" | undefined`) in `apps/web/src/types.ts:87`, so `Map<ProjectId, string>` construction needs `flatMap` filtering of `undefined`, not a plain `map`.
+- TabStrip mounting into ChatView is still pending — both T6 (TabStrip) and T8 (EmptyWorkspace) created standalone components that take `{threadId, environmentId}` props but are not yet wired into `apps/web/src/components/ChatView.tsx`. A future task should mount both inside the chat column.
+- Pre-existing typecheck failures (`apps/server/src/bin.test.ts`, `server.test.ts`, `SafeVaultWrite.ts`) remain — they were noted as out-of-scope in earlier task learnings. Web app typecheck (`cd apps/web && bun typecheck`) is clean and all 1050 web tests pass.

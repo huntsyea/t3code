@@ -23,6 +23,7 @@ import {
   FolderPlusIcon,
   LinkIcon,
   MessageSquareIcon,
+  MessageSquarePlusIcon,
   SettingsIcon,
   SquarePenIcon,
 } from "lucide-react";
@@ -39,6 +40,7 @@ import {
 } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useCommandPaletteStore } from "../commandPaletteStore";
+import { openOrActivateChatTab } from "./vault/openChatTab";
 import { readEnvironmentApi } from "../environmentApi";
 import { readPrimaryEnvironmentDescriptor, usePrimaryEnvironmentId } from "../environments/primary";
 import {
@@ -514,6 +516,13 @@ function OpenCommandPaletteDialog() {
   );
   const projectTitleById = useMemo(
     () => new Map<ProjectId, string>(projects.map((project) => [project.id, project.name])),
+    [projects],
+  );
+  const projectKindById = useMemo(
+    () =>
+      new Map<ProjectId, string>(
+        projects.flatMap((project) => (project.kind ? [[project.id, project.kind] as const] : [])),
+      ),
     [projects],
   );
 
@@ -1021,6 +1030,34 @@ function OpenCommandPaletteDialog() {
       icon: <SquarePenIcon className={ITEM_ICON_CLASS} />,
       addonIcon: <SquarePenIcon className={ADDON_ICON_CLASS} />,
       groups: [{ value: "projects", label: "Projects", items: projectThreadItems }],
+    });
+  }
+
+  const activeProjectKind = currentProjectId
+    ? (projectKindById.get(currentProjectId) ?? null)
+    : null;
+  if (
+    activeProjectKind === "vault" &&
+    activeThread &&
+    activeThread.environmentId &&
+    activeThread.id
+  ) {
+    const vaultThreadId = activeThread.id;
+    const vaultEnvironmentId = activeThread.environmentId;
+    const vaultThreadTitle = activeThread.title;
+    actionItems.push({
+      kind: "action",
+      value: "action:open-chat-tab",
+      searchTerms: ["chat", "open chat", "chat tab", "conversation", "vault"],
+      title: "Open chat tab",
+      icon: <MessageSquarePlusIcon className={ITEM_ICON_CLASS} />,
+      run: async () => {
+        await openOrActivateChatTab({
+          environmentId: vaultEnvironmentId,
+          threadId: vaultThreadId,
+          ...(vaultThreadTitle ? { title: vaultThreadTitle } : {}),
+        });
+      },
     });
   }
 

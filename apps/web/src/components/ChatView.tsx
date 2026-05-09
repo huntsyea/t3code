@@ -183,6 +183,8 @@ import { sanitizeThreadErrorMessage } from "~/rpc/transportError";
 import { retainThreadDetailSubscription } from "../environments/runtime/service";
 import { RightPanelSheet } from "./RightPanelSheet";
 import { Button } from "./ui/button";
+import { VaultFileTree } from "./vault/VaultFileTree";
+import * as Schema from "effect/Schema";
 import {
   buildVersionMismatchDismissalKey,
   dismissVersionMismatch,
@@ -192,6 +194,8 @@ import {
 
 const IMAGE_ONLY_BOOTSTRAP_PROMPT =
   "[User attached one or more images without additional text. Respond using the conversation context and the attached image(s).]";
+const FILE_TREE_OPEN_STORAGE_KEY = "atlas.fileTreeOpen";
+const FileTreeOpenSchema = Schema.Boolean;
 const EMPTY_ACTIVITIES: OrchestrationThreadActivity[] = [];
 const EMPTY_PROPOSED_PLANS: Thread["proposedPlans"] = [];
 const EMPTY_PROVIDERS: ServerProvider[] = [];
@@ -701,6 +705,14 @@ export default function ChatView(props: ChatViewProps) {
   const [pendingUserInputQuestionIndexByRequestId, setPendingUserInputQuestionIndexByRequestId] =
     useState<Record<string, number>>({});
   const [planSidebarOpen, setPlanSidebarOpen] = useState(false);
+  const [fileTreeOpen, setFileTreeOpen] = useLocalStorage(
+    FILE_TREE_OPEN_STORAGE_KEY,
+    false,
+    FileTreeOpenSchema,
+  );
+  const onToggleFileTree = useCallback(() => {
+    setFileTreeOpen((current) => !current);
+  }, [setFileTreeOpen]);
   const shouldUsePlanSidebarSheet = useMediaQuery(RIGHT_PANEL_INLINE_LAYOUT_MEDIA_QUERY);
   // Tracks whether the user explicitly dismissed the sidebar for the active turn.
   const planSidebarDismissedForTurnRef = useRef<string | null>(null);
@@ -3531,12 +3543,15 @@ export default function ChatView(props: ChatViewProps) {
           diffToggleShortcutLabel={diffPanelShortcutLabel}
           gitCwd={gitCwd}
           diffOpen={diffOpen}
+          showFileTreeToggle={activeProject?.kind === "vault"}
+          fileTreeOpen={fileTreeOpen}
           onRunProjectScript={runProjectScript}
           onAddProjectScript={saveProjectScript}
           onUpdateProjectScript={updateProjectScript}
           onDeleteProjectScript={deleteProjectScript}
           onToggleTerminal={toggleTerminalVisibility}
           onToggleDiff={onToggleDiff}
+          onToggleFileTree={onToggleFileTree}
         />
       </header>
 
@@ -3722,7 +3737,16 @@ export default function ChatView(props: ChatViewProps) {
         </div>
         {/* end chat column */}
 
-        {/* Plan sidebar */}
+        {activeProject?.kind === "vault" && fileTreeOpen ? (
+          <div className="hidden w-72 shrink-0 lg:flex">
+            <VaultFileTree
+              threadId={activeThread.id}
+              environmentId={activeThread.environmentId}
+              projectId={activeProject.id}
+            />
+          </div>
+        ) : null}
+
         {planSidebarOpen && !shouldUsePlanSidebarSheet ? (
           <PlanSidebar
             activePlan={activePlan}
