@@ -7,6 +7,7 @@ import {
   type LocalApi,
   ORCHESTRATION_WS_METHODS,
   type ServerSettingsPatch,
+  TABS_WS_METHODS,
   WS_METHODS,
 } from "@t3tools/contracts";
 import { applyGitStatusStreamEvent } from "@t3tools/shared/git";
@@ -148,6 +149,17 @@ export interface WsRpcClient {
     >;
     readonly subscribeShell: RpcStreamMethod<typeof ORCHESTRATION_WS_METHODS.subscribeShell>;
     readonly subscribeThread: RpcInputStreamMethod<typeof ORCHESTRATION_WS_METHODS.subscribeThread>;
+  };
+  readonly tabs: {
+    readonly getThreadState: RpcUnaryMethod<typeof TABS_WS_METHODS.getThreadState>;
+    readonly setThreadState: RpcUnaryMethod<typeof TABS_WS_METHODS.setThreadState>;
+    readonly openNoteTab: RpcUnaryMethod<typeof TABS_WS_METHODS.openNoteTab>;
+    readonly closeTab: RpcUnaryMethod<typeof TABS_WS_METHODS.closeTab>;
+    readonly activateTab: RpcUnaryMethod<typeof TABS_WS_METHODS.activateTab>;
+    readonly reorderTabs: RpcUnaryMethod<typeof TABS_WS_METHODS.reorderTabs>;
+    readonly subscribeThreadState: RpcInputStreamMethod<
+      typeof TABS_WS_METHODS.subscribeThreadState
+    >;
   };
 }
 
@@ -306,6 +318,25 @@ export function createWsRpcClient(transport: WsTransport): WsRpcClient {
           (client) => client[ORCHESTRATION_WS_METHODS.subscribeThread](input),
           listener,
           { ...options, tag: ORCHESTRATION_WS_METHODS.subscribeThread },
+        ),
+    },
+    tabs: {
+      getThreadState: (input) =>
+        transport.request((client) => client[TABS_WS_METHODS.getThreadState](input)),
+      setThreadState: (input) =>
+        transport.request((client) => client[TABS_WS_METHODS.setThreadState](input)),
+      openNoteTab: (input) =>
+        transport.request((client) => client[TABS_WS_METHODS.openNoteTab](input)),
+      closeTab: (input) => transport.request((client) => client[TABS_WS_METHODS.closeTab](input)),
+      activateTab: (input) =>
+        transport.request((client) => client[TABS_WS_METHODS.activateTab](input)),
+      reorderTabs: (input) =>
+        transport.request((client) => client[TABS_WS_METHODS.reorderTabs](input)),
+      subscribeThreadState: (input, listener, options) =>
+        transport.subscribe(
+          (client) => client[TABS_WS_METHODS.subscribeThreadState](input),
+          listener,
+          { ...options, tag: TABS_WS_METHODS.subscribeThreadState },
         ),
     },
   };
