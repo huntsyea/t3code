@@ -12,7 +12,12 @@ import * as Electron from "electron";
 
 import { DesktopEnvironment, type DesktopEnvironmentShape } from "../app/DesktopEnvironment.ts";
 
-export const DESKTOP_SCHEME = "t3";
+export const DESKTOP_SCHEME = "atlas";
+
+// TODO(atlas): remove the legacy `t3://` scheme one release after the Atlas
+// rebrand ships. Retained only so existing callers continue to resolve while
+// emitting a deprecation warning on each request.
+export const LEGACY_DESKTOP_SCHEME = "t3";
 
 export class ElectronProtocolRegistrationError extends Data.TaggedError(
   "ElectronProtocolRegistrationError",
@@ -69,17 +74,17 @@ export function normalizeDesktopProtocolPathname(rawPath: string): Option.Option
   return Option.some(segments.join("/"));
 }
 
+const DESKTOP_SCHEME_PRIVILEGES = {
+  standard: true,
+  secure: true,
+  supportFetchAPI: true,
+  corsEnabled: true,
+} as const;
+
 const registerDesktopSchemePrivileges = Effect.sync(() => {
   Electron.protocol.registerSchemesAsPrivileged([
-    {
-      scheme: DESKTOP_SCHEME,
-      privileges: {
-        standard: true,
-        secure: true,
-        supportFetchAPI: true,
-        corsEnabled: true,
-      },
-    },
+    { scheme: DESKTOP_SCHEME, privileges: DESKTOP_SCHEME_PRIVILEGES },
+    { scheme: LEGACY_DESKTOP_SCHEME, privileges: DESKTOP_SCHEME_PRIVILEGES },
   ]);
 }).pipe(Effect.withSpan("desktop.electron.protocol.registerSchemePrivileges"));
 
@@ -238,10 +243,10 @@ const make = Effect.gen(function* () {
     const staticRootResolved = environment.path.resolve(staticRoot.value);
     const staticRootPrefix = `${staticRootResolved}${environment.path.sep}`;
     const fallbackIndex = environment.path.join(staticRootResolved, "index.html");
+    const legacySchemeWarningEmitted = yield* Ref.make(false);
 
-    yield* registerFileProtocol({
-      scheme: DESKTOP_SCHEME,
-      handler: Effect.fn("desktop.electron.protocol.handleDesktopFileRequest")(function* (request) {
+    const handleStaticFileRequest = Effect.fn("desktop.electron.protocol.handleDesktopFileRequest")(
+      function* (request: Electron.ProtocolRequest) {
         const fileSystem = yield* FileSystem.FileSystem;
         const environment = yield* DesktopEnvironment;
         const candidate = yield* resolveDesktopStaticPath(staticRootResolved, request.url);
@@ -258,7 +263,27 @@ const make = Effect.gen(function* () {
         }
 
         return { path: resolvedCandidate } as const;
-      }),
+      },
+    );
+
+    yield* registerFileProtocol({
+      scheme: DESKTOP_SCHEME,
+      handler: handleStaticFileRequest,
+      onFailure: () => ({ path: fallbackIndex }),
+    });
+
+    yield* registerFileProtocol({
+      scheme: LEGACY_DESKTOP_SCHEME,
+      handler: (request) =>
+        Effect.gen(function* () {
+          const alreadyWarned = yield* Ref.getAndSet(legacySchemeWarningEmitted, true);
+          if (!alreadyWarned) {
+            yield* Effect.logWarning(
+              `[desktop] deprecated URL scheme "${LEGACY_DESKTOP_SCHEME}://" used; migrate to "${DESKTOP_SCHEME}://" — legacy scheme will be removed in a future release.`,
+            );
+          }
+          return yield* handleStaticFileRequest(request);
+        }),
       onFailure: () => ({ path: fallbackIndex }),
     });
   }).pipe(Effect.withSpan("desktop.electron.protocol.registerDesktopFileProtocol"));

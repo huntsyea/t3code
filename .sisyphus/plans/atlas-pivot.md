@@ -32,10 +32,10 @@
 
 ### PHASE 2 — PKM Advanced
 
-- [ ] **T23. Templates feature**
-- [ ] **T25. Frontmatter rendering in editor**
-- [ ] **T24. Document version history UI**
-- [ ] **T26. Graph view**
+- [x] **T23. Templates feature**
+- [x] **T25. Frontmatter rendering in editor**
+- [x] **T24. Document version history UI**
+- [x] **T26. Graph view**
 
 ### PHASE 3 — Rebrand to Atlas
 

@@ -4,7 +4,7 @@
   "workspaces": {
     "packages": [
       "apps/*",
-      "oxlint-plugin-t3code",
+      "oxlint-plugin-atlas",
       "packages/*",
       "scripts"
     ],

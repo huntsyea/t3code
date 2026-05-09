@@ -147,8 +147,8 @@
         "vitest-browser-react": "^2.0.5",
       },
     },
-    "oxlint-plugin-t3code": {
-      "name": "@t3tools/oxlint-plugin-t3code",
+    "oxlint-plugin-atlas": {
+      "name": "@t3tools/oxlint-plugin-atlas",
       "dependencies": {
         "@effect/platform-node": "catalog:",
         "@oxlint/plugins": "^1.63.0",
@@ -850,7 +850,7 @@
 
     "@t3tools/marketing": ["@t3tools/marketing@workspace:apps/marketing"],
 
-    "@t3tools/oxlint-plugin-t3code": ["@t3tools/oxlint-plugin-t3code@workspace:oxlint-plugin-t3code"],
+    "@t3tools/oxlint-plugin-atlas": ["@t3tools/oxlint-plugin-atlas@workspace:oxlint-plugin-atlas"],
 
     "@t3tools/scripts": ["@t3tools/scripts@workspace:scripts"],
 

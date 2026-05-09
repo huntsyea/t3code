@@ -42,18 +42,17 @@ describe("ElectronProtocol", () => {
       Layer.build(ElectronProtocol.layerSchemePrivileges).pipe(
         Effect.andThen(
           Effect.sync(() => {
+            const expectedPrivileges = {
+              standard: true,
+              secure: true,
+              supportFetchAPI: true,
+              corsEnabled: true,
+            };
             assert.deepEqual(registerSchemesAsPrivilegedMock.mock.calls, [
               [
                 [
-                  {
-                    scheme: "t3",
-                    privileges: {
-                      standard: true,
-                      secure: true,
-                      supportFetchAPI: true,
-                      corsEnabled: true,
-                    },
-                  },
+                  { scheme: "atlas", privileges: expectedPrivileges },
+                  { scheme: "t3", privileges: expectedPrivileges },
                 ],
               ],
             ]);
