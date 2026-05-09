@@ -3,8 +3,8 @@ import Layout from "../layouts/Layout.astro";
 import { RELEASES_URL } from "../lib/releases";
 ---
 
-<Layout title="Download — T3 Code" description="Download T3 Code for macOS, Windows, or Linux.">
-  <h1 class="heading">Download T3 Code</h1>
+<Layout title="Download — Atlas" description="Download Atlas for macOS, Windows, or Linux.">
+  <h1 class="heading">Download Atlas</h1>
   <p class="subheading">
     <span id="version-label">Loading latest release&hellip;</span>
     <a id="changelog-link" class="changelog-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none">View changelog<span aria-hidden="true"> &#8599;</span></a>
@@ -57,6 +57,24 @@ import { RELEASES_URL } from "../lib/releases";
       </div>
     </section>
   </div>
+
+  <section class="package-managers">
+    <h2 class="package-heading">Or install with a package manager</h2>
+    <div class="package-grid">
+      <div class="package-card">
+        <span class="package-label">macOS · Homebrew</span>
+        <pre class="package-code"><code>brew install --cask atlas</code></pre>
+      </div>
+      <div class="package-card">
+        <span class="package-label">Windows · winget</span>
+        <pre class="package-code"><code>winget install T3Tools.Atlas</code></pre>
+      </div>
+      <div class="package-card">
+        <span class="package-label">Arch Linux · AUR</span>
+        <pre class="package-code"><code>yay -S atlas-bin</code></pre>
+      </div>
+    </div>
+  </section>
 
   <p class="releases-link">
     Looking for older versions? Check the
@@ -229,6 +247,66 @@ import { RELEASES_URL } from "../lib/releases";
   .card-format {
     font-size: 0.8rem;
     color: var(--fg-dim);
+  }
+
+  /* ── Package managers ── */
+
+  .package-managers {
+    width: 100%;
+    max-width: 720px;
+    margin-top: 3.5rem;
+    opacity: 0;
+    animation: fade-in 1s ease-out 0.3s forwards;
+  }
+
+  .package-heading {
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--fg-muted);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .package-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .package-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .package-label {
+    font-size: 0.8rem;
+    color: var(--fg-dim);
+    letter-spacing: 0.01em;
+  }
+
+  .package-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.85rem;
+    color: var(--fg);
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .package-code code {
+    font: inherit;
+    color: inherit;
+    background: none;
   }
 
   /* ── Releases link ── */

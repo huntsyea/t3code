@@ -3,7 +3,12 @@ import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout>
-  <h1 class="tagline">T3 Code is the best way to code with AI.</h1>
+  <h1 class="tagline">Atlas — A PKM writing tool with embedded AI agents.</h1>
+  <p class="subtagline">
+    A local-first vault for your markdown notes, with wikilinks, backlinks,
+    tags, full-text search, and a graph view — paired with AI agents that live
+    inside your workspace.
+  </p>
 
   <a
     id="download-btn"
@@ -19,8 +24,38 @@ import Layout from "../layouts/Layout.astro";
   <a href="/download" class="other-platforms">Other platforms</a>
 
   <div class="screenshot-wrap">
-    <img src="/screenshot.jpeg" alt="T3 Code" class="screenshot" />
+    <img src="/screenshot.jpeg" alt="Atlas" class="screenshot" />
   </div>
+
+  <section class="features">
+    <h2 class="features-title">Built for thinking, not just typing.</h2>
+    <ul class="features-grid">
+      <li class="feature">
+        <h3>Local-first vault</h3>
+        <p>Your notes live as plain markdown files on your disk. No lock-in, no proprietary database.</p>
+      </li>
+      <li class="feature">
+        <h3>Wikilinks &amp; backlinks</h3>
+        <p>Connect ideas with <code>[[wikilinks]]</code>. Atlas resolves them, surfaces backlinks, and updates references when you rename a note.</p>
+      </li>
+      <li class="feature">
+        <h3>Tags &amp; structure</h3>
+        <p>Organise with <code>#tags</code> and nested <code>#parent/child</code> hierarchies. Frontmatter is rendered, not raw.</p>
+      </li>
+      <li class="feature">
+        <h3>Full-text search</h3>
+        <p>SQLite FTS5 indexing across every note in your vault. Cmd+Shift+F gets you there in milliseconds.</p>
+      </li>
+      <li class="feature">
+        <h3>Graph view</h3>
+        <p>See your vault as a knowledge graph. Spot orphan notes, dense clusters, and the shape of your thinking.</p>
+      </li>
+      <li class="feature">
+        <h3>Embedded AI agents</h3>
+        <p>Codex, Claude, and OpenCode work inside your vault — scoped to your notes, not the whole web.</p>
+      </li>
+    </ul>
+  </section>
 </Layout>
 
 <script>
@@ -105,9 +140,21 @@ import Layout from "../layouts/Layout.astro";
     letter-spacing: -0.035em;
     line-height: 1.15;
     text-align: center;
-    margin: 0 0 6vh;
+    margin: 0 1rem 1.5vh;
+    max-width: 22ch;
     opacity: 0;
     animation: fade-in 1s ease-out forwards;
+  }
+
+  .subtagline {
+    font-size: clamp(0.95rem, 1.3vw, 1.1rem);
+    color: var(--fg-muted);
+    text-align: center;
+    max-width: 56ch;
+    line-height: 1.55;
+    margin: 0 1.25rem 5vh;
+    opacity: 0;
+    animation: fade-in 1s ease-out 0.05s forwards;
   }
 
   /* ── Hero button ── */
@@ -219,6 +266,73 @@ import Layout from "../layouts/Layout.astro";
     }
   }
 
+  /* ── Features ── */
+
+  .features {
+    width: min(95vw, 1100px);
+    margin: 8vh auto 4rem;
+    padding: 0 1.25rem;
+    opacity: 0;
+    animation: fade-in 1s ease-out 0.45s forwards;
+  }
+
+  .features-title {
+    font-weight: 500;
+    font-size: clamp(1.4rem, 2.6vw, 2rem);
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+    text-align: center;
+    margin-bottom: 3rem;
+    color: var(--fg);
+  }
+
+  .features-grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .feature {
+    padding: 1.5rem 1.5rem 1.75rem;
+    background: var(--bg);
+    transition: background 0.3s ease;
+  }
+
+  .feature:hover {
+    background: rgba(255, 255, 255, 0.015);
+  }
+
+  .feature h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.5rem;
+    color: var(--fg);
+  }
+
+  .feature p {
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: var(--fg-muted);
+    margin: 0;
+  }
+
+  .feature code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.82em;
+    padding: 0.1em 0.4em;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--fg);
+  }
+
   /* ── Mobile ── */
 
   @media (max-width: 640px) {
@@ -227,11 +341,24 @@ import Layout from "../layouts/Layout.astro";
     }
 
     .tagline {
+      margin-bottom: 1vh;
+    }
+
+    .subtagline {
       margin-bottom: 4vh;
     }
 
     .screenshot-wrap {
       width: 95vw;
+    }
+
+    .features {
+      margin-top: 6vh;
+      padding: 0 0.75rem;
+    }
+
+    .features-title {
+      margin-bottom: 2rem;
     }
   }
 </style>
