@@ -1,0 +1,194 @@
+{
+  "_id": "Exit",
+  "_tag": "Failure",
+  "cause": {
+    "_id": "Cause",
+    "failures": [
+      {
+        "_tag": "Fail",
+        "error": {
+          "~effect/Schema/SchemaError": "~effect/Schema/SchemaError",
+          "_tag": "SchemaError",
+          "name": "SchemaError",
+          "issue": {
+            "~effect/SchemaIssue/Issue": "~effect/SchemaIssue/Issue",
+            "_tag": "AnyOf",
+            "ast": {
+              "~effect/Schema": "~effect/Schema",
+              "_tag": "Union",
+              "types": [
+                {
+                  "~effect/Schema": "~effect/Schema",
+                  "_tag": "Objects",
+                  "propertySignatures": [
+                    {
+                      "name": "kind",
+                      "type": {
+                        "~effect/Schema": "~effect/Schema",
+                        "_tag": "Literal",
+                        "literal": "chat"
+                      }
+                    },
+                    {
+                      "name": "id",
+                      "type": {
+                        "~effect/Schema": "~effect/Schema",
+                        "checks": [
+                          {
+                            "_tag": "Filter",
+                            "annotations": {
+                              "expected": "a value with a length of at least 1",
+                              "meta": {
+                                "_tag": "isMinLength",
+                                "minLength": 1
+                              },
+                              "~structural": true,
+                              "toArbitraryConstraint": {
+                                "string": {
+                                  "minLength": 1
+                                },
+                                "array": {
+                                  "minLength": 1
+                                }
+                              },
+                              "brands": [
+                                "ThreadId"
+                              ]
+                            },
+                            "aborted": false
+                          }
+                        ],
+                        "encoding": [
+                          {
+                            "to": {
+                              "~effect/Schema": "~effect/Schema",
+                              "_tag": "String"
+                            },
+                            "transformation": {
+                              "~effect/SchemaTransformation/Transformation": "~effect/SchemaTransformation/Transformation",
+                              "_tag": "Transformation",
+                              "decode": {},
+                              "encode": {}
+                            }
+                          }
+                        ],
+                        "_tag": "String"
+                      }
+                    },
+                    {
+                      "name": "title",
+                      "type": {
+                        "~effect/Schema": "~effect/Schema",
+                        "_tag": "String"
+                      }
+                    }
+                  ],
+                  "indexSignatures": []
+                },
+                {
+                  "~effect/Schema": "~effect/Schema",
+                  "_tag": "Objects",
+                  "propertySignatures": [
+                    {
+                      "name": "kind",
+                      "type": {
+                        "~effect/Schema": "~effect/Schema",
+                        "_tag": "Literal",
+                        "literal": "note"
+                      }
+                    },
+                    {
+                      "name": "id",
+                      "type": {
+                        "~effect/Schema": "~effect/Schema",
+                        "annotations": {
+                          "brands": [
+                            "TabId"
+                          ]
+                        },
+                        "_tag": "String"
+                      }
+                    },
+                    {
+                      "name": "vaultId",
+                      "type": {
+                        "~effect/Schema": "~effect/Schema",
+                        "checks": [
+                          {
+                            "_tag": "Filter",
+                            "annotations": {
+                              "expected": "a value with a length of at least 1",
+                              "meta": {
+                                "_tag": "isMinLength",
+                                "minLength": 1
+                              },
+                              "~structural": true,
+                              "toArbitraryConstraint": {
+                                "string": {
+                                  "minLength": 1
+                                },
+                                "array": {
+                                  "minLength": 1
+                                }
+                              },
+                              "brands": [
+                                "ProjectId"
+                              ]
+                            },
+                            "aborted": false
+                          }
+                        ],
+                        "encoding": [
+                          {
+                            "to": {
+                              "~effect/Schema": "~effect/Schema",
+                              "_tag": "String"
+                            },
+                            "transformation": {
+                              "~effect/SchemaTransformation/Transformation": "~effect/SchemaTransformation/Transformation",
+                              "_tag": "Transformation",
+                              "decode": {},
+                              "encode": {}
+                            }
+                          }
+                        ],
+                        "_tag": "String"
+                      }
+                    },
+                    {
+                      "name": "relativePath",
+                      "type": {
+                        "~effect/Schema": "~effect/Schema",
+                        "_tag": "String"
+                      }
+                    },
+                    {
+                      "name": "scrollPos",
+                      "type": {
+                        "~effect/Schema": "~effect/Schema",
+                        "_tag": "Number"
+                      }
+                    },
+                    {
+                      "name": "isDirty",
+                      "type": {
+                        "~effect/Schema": "~effect/Schema",
+                        "_tag": "Boolean"
+                      }
+                    }
+                  ],
+                  "indexSignatures": []
+                }
+              ],
+              "mode": "anyOf"
+            },
+            "actual": {
+              "kind": "graph"
+            },
+            "issues": []
+          }
+        }
+      }
+    ]
+  }
+}
