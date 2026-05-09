@@ -20,4 +20,5 @@ export * from "./tabs.ts";
 export * from "./editor.ts";
 export * from "./project.ts";
 export * from "./filesystem.ts";
+export * from "./vault.ts";
 export * from "./rpc.ts";

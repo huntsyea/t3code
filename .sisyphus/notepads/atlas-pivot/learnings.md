@@ -40,7 +40,19 @@
 - Branded ids already exist in `packages/contracts/src/baseSchemas.ts`: `ThreadId`, `ProjectId`, `CommandId`, `EventId`, `MessageId`, `TurnId`, etc.
 - Reuse `ThreadId` for chat tabs and import `ProjectId`/`ThreadId` from `./baseSchemas.ts` in new tab contracts.
 - Contract re-exports flow through `packages/contracts/src/index.ts`; add new schema files there so downstream imports stay stable.
+
 ## 2026-05-09
+
 - `project.create` / `project.created` now need `kind` threaded through contracts, decider, projector, persistence, and shell snapshot mapping.
 - `projection_projects.kind` is safest as a defaulted SQLite column with PRAGMA-guarded migration; existing rows stay `code`.
 - Web project state needed a compatibility default so older in-memory fixtures still map cleanly while project `kind` is rolling out.
+
+## Task 2 — VaultReader (vault.readNote / vault.listEntries)
+
+- `VaultReader` Effect service mirrors `SafeVaultWrite`: realpath the vault root, realpath the candidate, then assert prefix containment with macOS case-insensitive guard. Reads MUST realpath both root and target so symlinks-leaving-root resolve to PATH_ESCAPE rather than leaking content.
+- `effect/FileSystem.realPath` returns `PlatformError` whose `_tag === "PlatformError"` and whose `reason` is itself a tagged object (`{ _tag: "NotFound", module, method, ... }`), NOT the legacy `SystemError` shape with `reason: "NotFound"`. `isNotFoundPlatformError` must accept both shapes; the original check silently returned PATH_INVALID for missing files (fixed in this task).
+- `Layer.mock(Service)({...})` is the cleanest way to stub `ProjectionProjectRepository` and `VcsDriverRegistry` for unit tests. Provide via `Layer.provide(...)` to `VaultReaderLive` and `provideMerge` `NodeServices.layer` to satisfy `FileSystem` / `Path`.
+- macOS tmp directories normalise through `/private/var/folders/...`; tests must rely on `fs.realpath` semantics (already handled by `resolveSandboxedPath`) instead of comparing raw `os.tmpdir()` paths.
+- `listEntries` filters direct children only — no recursion — and excludes hidden entries (`startsWith(".")`) plus non-`.md` files. When VCS is detected via `VcsDriverRegistry.detect`, candidate relative paths are passed through `driver.filterIgnoredPaths` so vault `.gitignore` is respected without re-implementing parsing.
+- Keep `VaultReader` provisioned via `VaultReaderLayerLive = VaultReaderLive.pipe(Layer.provideMerge(VcsDriverRegistryLayerLive))` and merged into `WorkspaceLayerLive`; the WS handlers in `apps/server/src/ws.ts` then resolve `yield* VaultReader` at startup.
+- Pre-existing typecheck failures in `server.test.ts`/`bin.test.ts` (Missing `ThreadTabPersistence | VaultReader | ProjectionProjectRepository` in test contexts) are inherited from earlier tasks — out of scope for this task; my changes do not introduce typecheck errors in `VaultReader.ts` or `test/vault/VaultReader.test.ts`.

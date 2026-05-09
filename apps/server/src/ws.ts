@@ -28,6 +28,8 @@ import {
   ProjectWriteFileError,
   OrchestrationReplayEventsError,
   FilesystemBrowseError,
+  TABS_WS_METHODS,
+  type TabStateChange,
   ThreadId,
   type TerminalEvent,
   WS_METHODS,
@@ -55,6 +57,8 @@ import { ServerLifecycleEvents } from "./serverLifecycleEvents.ts";
 import { ServerRuntimeStartup } from "./serverRuntimeStartup.ts";
 import { redactServerSettingsForClient, ServerSettingsService } from "./serverSettings.ts";
 import { TerminalManager } from "./terminal/Services/Manager.ts";
+import { ThreadTabPersistence } from "./vault/ThreadTabPersistence.ts";
+import { VaultReader } from "./vault/VaultReader.ts";
 import { WorkspaceEntries } from "./workspace/Services/WorkspaceEntries.ts";
 import { WorkspaceFileSystem } from "./workspace/Services/WorkspaceFileSystem.ts";
 import { WorkspacePathOutsideRootError } from "./workspace/Services/WorkspacePaths.ts";
@@ -176,6 +180,8 @@ const makeWsRpcLayer = (currentSessionId: AuthSessionId) =>
       const startup = yield* ServerRuntimeStartup;
       const workspaceEntries = yield* WorkspaceEntries;
       const workspaceFileSystem = yield* WorkspaceFileSystem;
+      const vaultReader = yield* VaultReader;
+      const threadTabPersistence = yield* ThreadTabPersistence;
       const projectSetupScriptRunner = yield* ProjectSetupScriptRunner;
       const repositoryIdentityResolver = yield* RepositoryIdentityResolver;
       const serverEnvironment = yield* ServerEnvironment;
@@ -969,6 +975,14 @@ const makeWsRpcLayer = (currentSessionId: AuthSessionId) =>
             ),
             { "rpc.aggregate": "workspace" },
           ),
+        [WS_METHODS.vaultReadNote]: (input) =>
+          observeRpcEffect(WS_METHODS.vaultReadNote, vaultReader.readNote(input), {
+            "rpc.aggregate": "vault",
+          }),
+        [WS_METHODS.vaultListEntries]: (input) =>
+          observeRpcEffect(WS_METHODS.vaultListEntries, vaultReader.listEntries(input), {
+            "rpc.aggregate": "vault",
+          }),
         [WS_METHODS.shellOpenInEditor]: (input) =>
           observeRpcEffect(WS_METHODS.shellOpenInEditor, open.openInEditor(input), {
             "rpc.aggregate": "workspace",
@@ -1224,6 +1238,67 @@ const makeWsRpcLayer = (currentSessionId: AuthSessionId) =>
               );
             }),
             { "rpc.aggregate": "auth" },
+          ),
+        [TABS_WS_METHODS.getThreadState]: (input) =>
+          observeRpcEffect(
+            TABS_WS_METHODS.getThreadState,
+            threadTabPersistence.getState(input.threadId).pipe(Effect.orDie),
+            { "rpc.aggregate": "tabs" },
+          ),
+        [TABS_WS_METHODS.setThreadState]: (input) =>
+          observeRpcEffect(
+            TABS_WS_METHODS.setThreadState,
+            threadTabPersistence.saveState(input.threadId, input.state).pipe(Effect.orDie),
+            { "rpc.aggregate": "tabs" },
+          ),
+        [TABS_WS_METHODS.openNoteTab]: (input) =>
+          observeRpcEffect(
+            TABS_WS_METHODS.openNoteTab,
+            threadTabPersistence
+              .openNoteTab({
+                threadId: input.threadId,
+                vaultId: input.vaultId,
+                relativePath: input.relativePath,
+              })
+              .pipe(Effect.orDie),
+            { "rpc.aggregate": "tabs" },
+          ),
+        [TABS_WS_METHODS.closeTab]: (input) =>
+          observeRpcEffect(
+            TABS_WS_METHODS.closeTab,
+            threadTabPersistence
+              .closeTab({ threadId: input.threadId, tabId: input.tabId })
+              .pipe(Effect.orDie),
+            { "rpc.aggregate": "tabs" },
+          ),
+        [TABS_WS_METHODS.activateTab]: (input) =>
+          observeRpcEffect(
+            TABS_WS_METHODS.activateTab,
+            threadTabPersistence
+              .activateTab({ threadId: input.threadId, tabId: input.tabId })
+              .pipe(Effect.orDie),
+            { "rpc.aggregate": "tabs" },
+          ),
+        [TABS_WS_METHODS.reorderTabs]: (input) =>
+          observeRpcEffect(
+            TABS_WS_METHODS.reorderTabs,
+            threadTabPersistence
+              .reorderTabs({ threadId: input.threadId, orderedIds: input.orderedIds })
+              .pipe(Effect.orDie),
+            { "rpc.aggregate": "tabs" },
+          ),
+        [TABS_WS_METHODS.subscribeThreadState]: (input) =>
+          observeRpcStream(
+            TABS_WS_METHODS.subscribeThreadState,
+            Stream.callback<TabStateChange>((queue) =>
+              Effect.acquireRelease(
+                threadTabPersistence.subscribe(input.threadId, (change) =>
+                  Queue.offer(queue, change),
+                ),
+                (unsubscribe) => Effect.sync(unsubscribe),
+              ),
+            ),
+            { "rpc.aggregate": "tabs" },
           ),
       });
     }),

@@ -46,6 +46,8 @@ import { ProviderRegistryLive } from "./provider/Layers/ProviderRegistry.ts";
 import { ServerSettingsLive } from "./serverSettings.ts";
 import { ProjectFaviconResolverLive } from "./project/Layers/ProjectFaviconResolver.ts";
 import { RepositoryIdentityResolverLive } from "./project/Layers/RepositoryIdentityResolver.ts";
+import { ThreadTabPersistenceLive } from "./vault/ThreadTabPersistence.ts";
+import { VaultReaderLive } from "./vault/VaultReader.ts";
 import { WorkspaceEntriesLive } from "./workspace/Layers/WorkspaceEntries.ts";
 import { WorkspaceFileSystemLive } from "./workspace/Layers/WorkspaceFileSystem.ts";
 import { WorkspacePathsLive } from "./workspace/Layers/WorkspacePaths.ts";
@@ -224,10 +226,18 @@ const WorkspaceFileSystemLayerLive = WorkspaceFileSystemLive.pipe(
   Layer.provide(WorkspaceEntriesLayerLive),
 );
 
+const VaultReaderLayerLive = VaultReaderLive.pipe(Layer.provideMerge(VcsDriverRegistryLayerLive));
+
+const ThreadTabPersistenceLayerLive = ThreadTabPersistenceLive.pipe(
+  Layer.provide(SqlitePersistenceLayerLive),
+);
+
 const WorkspaceLayerLive = Layer.mergeAll(
   WorkspacePathsLive,
   WorkspaceEntriesLayerLive,
   WorkspaceFileSystemLayerLive,
+  VaultReaderLayerLive,
+  ThreadTabPersistenceLayerLive,
 );
 
 const AuthLayerLive = ServerAuthLive.pipe(
