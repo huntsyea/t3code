@@ -22,6 +22,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { readEnvironmentConnection } from "../../environments/runtime";
 import { cn } from "~/lib/utils";
 import { toastManager } from "../ui/toast";
+import { livePreviewExtensions } from "./livePreview";
 
 const AUTOSAVE_DEBOUNCE_MS = 2000;
 
@@ -271,6 +272,7 @@ export function MarkdownEditor({
         highlightSelectionMatches(),
         EditorView.lineWrapping,
         markdown(),
+        ...livePreviewExtensions,
         editorTheme,
         saveKeymap,
         keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),

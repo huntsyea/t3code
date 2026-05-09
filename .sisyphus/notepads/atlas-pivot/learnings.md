@@ -108,8 +108,51 @@
 - Debounce/batch via `DrainableWorker<readonly VaultFileEvent[]>` — `NodeTimers.setTimeout` (250ms default) collects events into a per-entry `Map<string, VaultFileEvent>` keyed by `${kind}:${relativePath}`, then `worker.enqueue(batch)` ships the batch. Worker ensures `tearDown` drains pending dispatch before closing chokidar so subscribers are guaranteed to see queued events.
 - `Layer.scoped` does not exist in this Effect 4.0 beta — use `Layer.effect(Tag, makeFn)` and rely on `Effect.addFinalizer` inside `makeFn` for shutdown drain. `Scope.extend` is replaced by `Scope.provide(scope)`. `Closeable` scope type is exported as `Scope.Closeable`.
 - chokidar's `awaitWriteFinish: { stabilityThreshold, pollInterval }` collapses fsync sequences (good for editors that write+truncate). Pair with `ignoreInitial: true` so we don't replay the whole vault on subscribe.
-- chokidar `ignored` regex `[/\/\.git\//, /\/\.atlas\//]` matches paths *containing* those segments — works for nested paths under those directories. Test asserts the option shape passed to chokidar; runtime ignoring is chokidar's responsibility.
+- chokidar `ignored` regex `[/\/\.git\//, /\/\.atlas\//]` matches paths _containing_ those segments — works for nested paths under those directories. Test asserts the option shape passed to chokidar; runtime ignoring is chokidar's responsibility.
 - macOS realpath caveat: `os.tmpdir()` returns `/var/folders/...` but realpath resolves to `/private/var/folders/...`. Tests must `await fs.realpath(root)` after creating the temp directory; the watcher itself calls `fileSystem.realPath` so emitted absolute paths must align with the resolved root.
 - `// @effect-diagnostics nodeBuiltinImport:off globalTimers:off` directive at top of file suppresses lints when intentionally using `node:timers` — established pattern (see `ThreadTabPersistence.ts:6`).
 - `observeRpcStream` in WS handler wraps `Stream.callback<VaultFileEvent>` + `Effect.acquireRelease(subscribe, unsubscribe)` — identical to `subscribeTerminalEvents`. `vault.subscribeFileEvents` RPC is added to `WS_METHODS` and `WsRpcGroup`.
 - Pre-existing typecheck errors in `apps/server/src/server.test.ts`, `bin.test.ts`, `SafeVaultWrite.ts` remain (T11 learnings already noted). My changes introduce 0 new typecheck errors and 0 new test failures (verified via stash + baseline run: 36 pre-existing failures in `server.test.ts` are identical with or without T9).
+
+## Task 19 — Tag parser (`packages/shared/src/markdown/tag.ts`)
+
+- Wikilink parser already exists at `packages/shared/src/markdown/wikilink.ts`. Tag parser mirrors its exclusion-zone shape (fenced code, inline code) but adds URL exclusion (so `https://x.com/#anchor` does not register `#anchor` as a tag). Wikilink parser excludes frontmatter; tag parser READS frontmatter as a complementary source.
+- Tag rules: body must start with a letter (`[a-zA-Z]`) and continue with `[a-zA-Z0-9_/-]*` — supports `parent/child` nesting, rejects `#123`, requires non-wordish preceding character so `foo#bar` is not a tag.
+- Heading detection: `(^|\n)(#{1,6})(?=[ \t]|$|\n)` — tracks each `#` position so `#abc` after a heading position is still rejected (every `#` in `### deep` is in the heading set).
+- URL exclusion uses `\bhttps?:\/\/[^\s<>"')\]]+` — entire URL span excluded so the `#fragment` inside is invisible to the tag scanner.
+- Inline code pairing must reject runs of mismatched length AND reject pairs that span blank lines (`/\n\s*\n/`); otherwise `` `unmatched ` ... `paragraph break` ... `#tag` `` falsely excludes the tag.
+- Frontmatter input is a parsed object (not raw YAML). Caller is responsible for parsing — keeps the parser pure and dependency-free. Supports both array (`tags: [foo, bar]`) and comma-separated string (`tags: foo, bar`) forms; entries failing the `TAG_BODY_FULL` shape check are silently dropped.
+- Deduplication: lowercase `Set<string>` shared between inline + frontmatter so the same tag from both sources is collapsed; first occurrence (inline-first iteration order) wins.
+- Test location: spec called for `packages/shared/test/markdown/tag.test.ts` even though sibling tests are colocated in `src/`. Vitest default include picks up the new path; `tsconfig.json` `include` updated to `["src", "test"]` so `bun typecheck` covers the test file.
+- Subpath export added as `"./markdown/tag"` in `packages/shared/package.json`. Wikilink parser does NOT yet have its own subpath export — out of scope for T19 to add one.
+- Pre-existing typecheck/lint warnings in `wikilink.ts` (no-useless-escape, no-array-sort) and unrelated `apps/web/src/components/editor/livePreview.ts` errors confirmed pre-existing; T19 introduces 0 new typecheck errors and 0 new lint warnings.
+
+## T13 — Wikilink Parser
+
+- Sister module exists at `packages/shared/src/markdown/tag.ts` (T12) — same architectural pattern: pure parser, exclusion-zone detection (frontmatter, fenced code, inline code, HTML comments).
+- Tests live in `packages/shared/test/markdown/` (NOT co-located in `src/`) — `tsconfig.json` was updated to `"include": ["src", "test"]` to support this structure.
+- Lint gotchas in oxlint:
+  - `\[` inside `[^...]` char class is an unnecessary escape — use `[^[\]...]`.
+  - `\`` in template literal inside `?:` ternary is unnecessary; extracting the ternary to a const variable avoids the escape and improves readability.
+  - Prefer `Array#toSorted()` over `[...arr].sort()` (no-array-sort rule).
+- `parseWikilinks` rejection rules (basenames only):
+  - `[^[\]|\n#^]+` for the basename naturally rejects `[[Note#H]]`, `[[Note^id]]`, `[[Note|alias]]`.
+  - Transclusion `![[...]]` rejected by checking the byte before `[[` for `!` (0x21).
+- `isWikilinkAt` uses inclusive-end semantics so the caret position right after `]]` still resolves to the wikilink — important for click-to-navigate (T15) and autocomplete (T14).
+- Pre-existing typecheck errors in `apps/web/src/components/editor/livePreview.ts` and `MarkdownEditor.tsx` (unrelated to T13) — these are from earlier in-flight work, not introduced by this task.
+
+## Task 12 — Live Preview decorations (CodeMirror 6)
+
+- `syntaxTree(state).iterate(...)` invokes the callback with a `SyntaxNodeRef`, **not** a `SyntaxNode`. `firstChild` / `lastChild` / `parent` only exist on the full `SyntaxNode`, so callers must unwrap via `nodeRef.node` before walking children. TypeScript surfaces this as `Property 'firstChild' does not exist on type 'SyntaxNodeRef'`.
+- `EditorView` is both a value (for `EditorView.theme(...)`) and a type. Importing it as `type EditorView` will compile in isolation but fails at the first `EditorView.theme` usage — keep it as a value import.
+- `@lezer/markdown` node names map cleanly to decoration targets:
+  - Headings: `ATXHeading1` … `ATXHeading6` with first child `HeaderMark` covering the leading `#`s. Hide `[node.from, headerMark.to + 1)` to swallow the trailing space.
+  - Bold / italic: `StrongEmphasis` / `Emphasis`, with first/last children `EmphasisMark` (for both `**` and `*`).
+  - Links: flat children `LinkMark `[`, ..., LinkMark `]`, LinkMark `(`, URL, LinkMark `)``. The first two LinkMarks are the bracket pair; everything after the closing bracket can be hidden as one range up to the last LinkMark / node end.
+  - Fenced code: child `CodeText` is the body between the ``` fences; fences themselves remain visible by leaving them undecorated.
+  - Bullet items: `ListItem` whose `parent.name === "BulletList"` and whose `firstChild.name === "ListMark"`. Replace `[marker.from, marker.to + 1)` to swallow `- ` / `* ` and substitute the glyph widget.
+- Cursor-aware toggle: rebuild decorations on `selectionSet` (not just `docChanged` / `viewportChanged`), and compare the line number of `view.state.selection.main.from`/`to` against each candidate decoration's start line. Treating any line touched by the selection as "cursor-on" matches Obsidian's UX for multi-line selections.
+- `RangeSetBuilder<Decoration>` requires strictly increasing `from` positions. Iterating the syntax tree in document order and emitting per-node decorations as we go satisfies this naturally; mixing decorations from multiple nodes that overlap must still be added in left-to-right order.
+- `Decoration.replace({})` is a zero-width substitution — perfect for hiding marker characters without altering offsets. Pair with `Decoration.replace({ widget })` when the hidden text should be replaced by a styled glyph.
+- Plugin ordering: `livePreviewExtensions` must come *after* `markdown()` so that `syntaxTree()` resolves to the markdown parse tree rather than a generic stub.
+- Pre-existing typecheck failures (apps/server `bin.test.ts`, `server.test.ts`, `SafeVaultWrite.ts`, `031_ProjectionProjectsKind.test.ts`) are inherited from earlier tasks (T6–T11) — out of scope for T12. My changes introduce 0 new typecheck/lint errors, and `@t3tools/web` typecheck is clean.
