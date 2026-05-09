@@ -185,7 +185,11 @@ import { RightPanelSheet } from "./RightPanelSheet";
 import { Button } from "./ui/button";
 import { VaultFileTree } from "./vault/VaultFileTree";
 import { VaultSearchPanel } from "./vault/VaultSearchPanel";
+import { GraphView } from "./vault/GraphView";
+import { VersionHistoryPanel } from "./vault/VersionHistoryPanel";
 import { useVaultSearchStore } from "../vaultSearchStore";
+import { useGraphViewStore } from "../graphViewStore";
+import { useVersionHistoryStore } from "../versionHistoryStore";
 import * as Schema from "effect/Schema";
 import {
   buildVersionMismatchDismissalKey,
@@ -718,6 +722,11 @@ export default function ChatView(props: ChatViewProps) {
   const vaultSearchOpen = useVaultSearchStore((state) => state.open);
   const setVaultSearchOpen = useVaultSearchStore((state) => state.setOpen);
   const toggleVaultSearch = useVaultSearchStore((state) => state.toggleOpen);
+  const graphViewOpen = useGraphViewStore((state) => state.open);
+  const setGraphViewOpen = useGraphViewStore((state) => state.setOpen);
+  const versionHistoryOpen = useVersionHistoryStore((state) => state.open);
+  const versionHistoryRelativePath = useVersionHistoryStore((state) => state.relativePath);
+  const closeVersionHistory = useVersionHistoryStore((state) => state.close);
   const shouldUsePlanSidebarSheet = useMediaQuery(RIGHT_PANEL_INLINE_LAYOUT_MEDIA_QUERY);
   // Tracks whether the user explicitly dismissed the sidebar for the active turn.
   const planSidebarDismissedForTurnRef = useRef<string | null>(null);
@@ -3778,6 +3787,29 @@ export default function ChatView(props: ChatViewProps) {
             threadId={activeThread.id}
             environmentId={activeThread.environmentId}
             projectId={activeProject.id}
+          />
+        ) : null}
+
+        {activeProject?.kind === "vault" && activeThread ? (
+          <GraphView
+            open={graphViewOpen}
+            onOpenChange={setGraphViewOpen}
+            threadId={activeThread.id}
+            environmentId={activeThread.environmentId}
+            projectId={activeProject.id}
+          />
+        ) : null}
+
+        {activeProject?.kind === "vault" && activeThread ? (
+          <VersionHistoryPanel
+            open={versionHistoryOpen}
+            onOpenChange={(open) => {
+              if (!open) closeVersionHistory();
+            }}
+            threadId={activeThread.id}
+            environmentId={activeThread.environmentId}
+            projectId={activeProject.id}
+            relativePath={versionHistoryRelativePath}
           />
         ) : null}
 

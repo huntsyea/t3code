@@ -87,10 +87,17 @@ import {
   VaultResolveBasenameResult,
   VaultGetBacklinksInput,
   VaultGetBacklinksResult,
+  VaultGetGraphInput,
+  VaultGetGraphResult,
+  VaultGetVersionHistoryInput,
+  VaultGetVersionHistoryResult,
+  VaultRevertToVersionInput,
+  VaultRevertToVersionResult,
   VaultSearchInput,
   VaultSearchResult,
   VaultSubscribeFileEventsInput,
   VaultSubscribeIndexUpdatesInput,
+  VaultVersionHistoryError,
   VaultWatcherError,
   VaultWriteNoteInput,
   VaultWriteNoteResult,
@@ -156,6 +163,9 @@ export const WS_METHODS = {
   vaultSearch: "vault.search",
   vaultGetBacklinks: "vault.getBacklinks",
   vaultSubscribeIndexUpdates: "vault.subscribeIndexUpdates",
+  vaultGetVersionHistory: "vault.getVersionHistory",
+  vaultRevertToVersion: "vault.revertToVersion",
+  vaultGetGraph: "vault.getGraph",
 
   // Shell methods
   shellOpenInEditor: "shell.openInEditor",
@@ -393,6 +403,24 @@ export const WsVaultGetBacklinksRpc = Rpc.make(WS_METHODS.vaultGetBacklinks, {
   error: VaultIndexQueryError,
 });
 
+export const WsVaultGetVersionHistoryRpc = Rpc.make(WS_METHODS.vaultGetVersionHistory, {
+  payload: VaultGetVersionHistoryInput,
+  success: VaultGetVersionHistoryResult,
+  error: VaultVersionHistoryError,
+});
+
+export const WsVaultRevertToVersionRpc = Rpc.make(WS_METHODS.vaultRevertToVersion, {
+  payload: VaultRevertToVersionInput,
+  success: VaultRevertToVersionResult,
+  error: VaultVersionHistoryError,
+});
+
+export const WsVaultGetGraphRpc = Rpc.make(WS_METHODS.vaultGetGraph, {
+  payload: VaultGetGraphInput,
+  success: VaultGetGraphResult,
+  error: VaultIndexQueryError,
+});
+
 export const WsShellOpenInEditorRpc = Rpc.make(WS_METHODS.shellOpenInEditor, {
   payload: OpenInEditorInput,
   error: OpenError,
@@ -627,6 +655,9 @@ export const WsRpcGroup = RpcGroup.make(
   WsVaultNotesByTagRpc,
   WsVaultSearchRpc,
   WsVaultGetBacklinksRpc,
+  WsVaultGetVersionHistoryRpc,
+  WsVaultRevertToVersionRpc,
+  WsVaultGetGraphRpc,
   WsShellOpenInEditorRpc,
   WsFilesystemBrowseRpc,
   WsSubscribeVcsStatusRpc,

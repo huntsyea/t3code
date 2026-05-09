@@ -22,6 +22,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { readEnvironmentConnection } from "../../environments/runtime";
 import { cn } from "~/lib/utils";
 import { toastManager } from "../ui/toast";
+import { frontmatterExtensions } from "./frontmatterDecoration";
 import { livePreviewExtensions } from "./livePreview";
 import { wikilinkAutocomplete } from "./wikilinkAutocomplete";
 import { wikilinkNavigate, wikilinkNavigateTheme } from "./wikilinkNavigate";
@@ -339,6 +340,7 @@ export function MarkdownEditor({
         highlightSelectionMatches(),
         EditorView.lineWrapping,
         markdown(),
+        ...frontmatterExtensions,
         ...livePreviewExtensions,
         ...(wikilinkNavigateExtension ? [wikilinkNavigateExtension, wikilinkNavigateTheme] : []),
         ...(wikilinkAutocompleteExtension ? [wikilinkAutocompleteExtension] : []),

@@ -26,9 +26,9 @@
 - [x] **T17. Backlinks index reactor**
 - [x] **T20. Tag browser UI**
 - [x] **T21. Vault FTS5 full-text search (server) + WS method**
-- [ ] **T16. Wikilink auto-update on rename**
-- [ ] **T18. Backlinks panel UI**
-- [ ] **T22. Vault search UI**
+- [x] **T16. Wikilink auto-update on rename**
+- [x] **T18. Backlinks panel UI**
+- [x] **T22. Vault search UI**
 
 ### PHASE 2 — PKM Advanced
 

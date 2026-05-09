@@ -65,6 +65,7 @@ import { VaultIndex } from "./vault/VaultIndex.ts";
 import { VaultIndexReactor } from "./orchestration/Services/VaultIndexReactor.ts";
 import { VaultReader } from "./vault/VaultReader.ts";
 import { VaultRename } from "./vault/VaultRename.ts";
+import { VaultVersionHistory } from "./vault/VaultVersionHistory.ts";
 import { VaultWatcher } from "./vault/VaultWatcher.ts";
 import { VaultWriter } from "./vault/VaultWriter.ts";
 import { WorkspaceEntries } from "./workspace/Services/WorkspaceEntries.ts";
@@ -194,6 +195,7 @@ const makeWsRpcLayer = (currentSessionId: AuthSessionId) =>
       const vaultWriter = yield* VaultWriter;
       const vaultIndex = yield* VaultIndex;
       const vaultIndexReactor = yield* VaultIndexReactor;
+      const vaultVersionHistory = yield* VaultVersionHistory;
       const threadTabPersistence = yield* ThreadTabPersistence;
       const projectSetupScriptRunner = yield* ProjectSetupScriptRunner;
       const repositoryIdentityResolver = yield* RepositoryIdentityResolver;
@@ -1068,6 +1070,69 @@ const makeWsRpcLayer = (currentSessionId: AuthSessionId) =>
               Effect.map((sources) => ({
                 backlinks: sources.map((sourcePath) => ({ sourcePath })),
               })),
+              Effect.mapError(
+                (cause) =>
+                  new VaultIndexQueryError({
+                    code: "QUERY_FAILED",
+                    message: cause.message,
+                    cause,
+                  }),
+              ),
+            ),
+            { "rpc.aggregate": "vault" },
+          ),
+        [WS_METHODS.vaultGetVersionHistory]: (input) =>
+          observeRpcEffect(
+            WS_METHODS.vaultGetVersionHistory,
+            vaultVersionHistory.getVersionHistory(input),
+            { "rpc.aggregate": "vault" },
+          ),
+        [WS_METHODS.vaultRevertToVersion]: (input) =>
+          observeRpcEffect(
+            WS_METHODS.vaultRevertToVersion,
+            vaultVersionHistory.revertToVersion(input),
+            { "rpc.aggregate": "vault" },
+          ),
+        [WS_METHODS.vaultGetGraph]: (input) =>
+          observeRpcEffect(
+            WS_METHODS.vaultGetGraph,
+            vaultIndex.getGraph(input.projectId).pipe(
+              Effect.map((graph) => {
+                const nodeIds = new Set(graph.nodes.map((node) => node.relativePath));
+                const basenameToPath = new Map<string, string>();
+                for (const node of graph.nodes) {
+                  const last = node.relativePath.split("/").pop() ?? node.relativePath;
+                  const stem = last.endsWith(".md") ? last.slice(0, -".md".length) : last;
+                  if (!basenameToPath.has(stem)) {
+                    basenameToPath.set(stem, node.relativePath);
+                  }
+                }
+                const nodes = graph.nodes.map((node) => {
+                  const last = node.relativePath.split("/").pop() ?? node.relativePath;
+                  const fallbackStem = last.endsWith(".md") ? last.slice(0, -".md".length) : last;
+                  const trimmedTitle = node.title?.trim() ?? "";
+                  return {
+                    id: node.relativePath,
+                    title: trimmedTitle.length > 0 ? trimmedTitle : fallbackStem,
+                  };
+                });
+                const edges = graph.edges.map((edge) => {
+                  const resolvedTarget = basenameToPath.get(edge.targetBasename) ?? null;
+                  if (resolvedTarget && nodeIds.has(edge.sourcePath)) {
+                    return {
+                      source: edge.sourcePath,
+                      target: resolvedTarget,
+                      resolved: true,
+                    };
+                  }
+                  return {
+                    source: edge.sourcePath,
+                    target: resolvedTarget ?? edge.targetBasename,
+                    resolved: resolvedTarget !== null,
+                  };
+                });
+                return { nodes, edges };
+              }),
               Effect.mapError(
                 (cause) =>
                   new VaultIndexQueryError({

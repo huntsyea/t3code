@@ -83,6 +83,9 @@ export interface WsRpcClient {
     readonly subscribeIndexUpdates: RpcInputStreamMethod<
       typeof WS_METHODS.vaultSubscribeIndexUpdates
     >;
+    readonly getVersionHistory: RpcUnaryMethod<typeof WS_METHODS.vaultGetVersionHistory>;
+    readonly revertToVersion: RpcUnaryMethod<typeof WS_METHODS.vaultRevertToVersion>;
+    readonly getGraph: RpcUnaryMethod<typeof WS_METHODS.vaultGetGraph>;
   };
   readonly filesystem: {
     readonly browse: RpcUnaryMethod<typeof WS_METHODS.filesystemBrowse>;
@@ -224,6 +227,11 @@ export function createWsRpcClient(transport: WsTransport): WsRpcClient {
           listener,
           { ...options, tag: WS_METHODS.vaultSubscribeIndexUpdates },
         ),
+      getVersionHistory: (input) =>
+        transport.request((client) => client[WS_METHODS.vaultGetVersionHistory](input)),
+      revertToVersion: (input) =>
+        transport.request((client) => client[WS_METHODS.vaultRevertToVersion](input)),
+      getGraph: (input) => transport.request((client) => client[WS_METHODS.vaultGetGraph](input)),
     },
     filesystem: {
       browse: (input) => transport.request((client) => client[WS_METHODS.filesystemBrowse](input)),

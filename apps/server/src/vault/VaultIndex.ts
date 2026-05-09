@@ -52,6 +52,21 @@ export interface VaultIndexTaggedNote {
   readonly title: string | null;
 }
 
+export interface VaultIndexGraphNode {
+  readonly relativePath: string;
+  readonly title: string | null;
+}
+
+export interface VaultIndexGraphEdge {
+  readonly sourcePath: string;
+  readonly targetBasename: string;
+}
+
+export interface VaultIndexGraph {
+  readonly nodes: ReadonlyArray<VaultIndexGraphNode>;
+  readonly edges: ReadonlyArray<VaultIndexGraphEdge>;
+}
+
 export interface VaultIndexShape {
   readonly upsertNote: (
     vaultId: ProjectId,
@@ -100,6 +115,8 @@ export interface VaultIndexShape {
     vaultId: ProjectId,
     tag: string,
   ) => Effect.Effect<ReadonlyArray<VaultIndexTaggedNote>, VaultIndexError>;
+
+  readonly getGraph: (vaultId: ProjectId) => Effect.Effect<VaultIndexGraph, VaultIndexError>;
 }
 
 export class VaultIndex extends Context.Service<VaultIndex, VaultIndexShape>()(
@@ -317,6 +334,39 @@ export const makeVaultIndex = Effect.gen(function* () {
       Effect.mapError(toError("VaultIndex.notesByTag", "Failed to list notes by tag")),
     );
 
+  const getGraph: VaultIndexShape["getGraph"] = (vaultId) =>
+    Effect.gen(function* () {
+      const noteRows = yield* sql<{
+        readonly relative_path: string;
+        readonly title: string | null;
+      }>`
+        SELECT relative_path, title
+        FROM vault_notes
+        WHERE vault_id = ${vaultId}
+        ORDER BY relative_path ASC
+      `.pipe(Effect.mapError(toError("VaultIndex.getGraph", "Failed to load nodes")));
+
+      const linkRows = yield* sql<{
+        readonly source_path: string;
+        readonly target_basename: string;
+      }>`
+        SELECT source_path, target_basename
+        FROM vault_wikilinks
+        WHERE vault_id = ${vaultId}
+      `.pipe(Effect.mapError(toError("VaultIndex.getGraph", "Failed to load edges")));
+
+      return {
+        nodes: noteRows.map((row) => ({
+          relativePath: row.relative_path,
+          title: row.title,
+        })),
+        edges: linkRows.map((row) => ({
+          sourcePath: row.source_path,
+          targetBasename: row.target_basename,
+        })),
+      };
+    });
+
   return {
     upsertNote,
     deleteNote,
@@ -327,6 +377,7 @@ export const makeVaultIndex = Effect.gen(function* () {
     resolveBasename,
     listTags,
     notesByTag,
+    getGraph,
   } satisfies VaultIndexShape;
 });
 

@@ -315,3 +315,117 @@ export const VaultGetBacklinksResult = Schema.Struct({
   backlinks: Schema.Array(VaultBacklink),
 });
 export type VaultGetBacklinksResult = typeof VaultGetBacklinksResult.Type;
+
+/**
+ * Version history (T24) — git-backed revision log for a single note.
+ *
+ * Surfaced when the vault root contains a `.git/` directory. When unavailable,
+ * the server returns `{ available: false, reason }` so the UI can render an
+ * informational state instead of failing.
+ *
+ * NOTE(plan-19): version history currently shells out to `git` directly.
+ * Future migration to `VcsDriver` is tracked by `// TODO(plan-19)` markers at
+ * each call site in `apps/server/src/vault/VaultVersionHistory.ts`.
+ */
+export const VaultGetVersionHistoryInput = Schema.Struct({
+  projectId: ProjectId,
+  relativePath: TrimmedNonEmptyString.check(Schema.isMaxLength(VAULT_PATH_MAX_LENGTH)),
+});
+export type VaultGetVersionHistoryInput = typeof VaultGetVersionHistoryInput.Type;
+
+export const VaultVersionHistoryUnavailableReason = Schema.Literals(["no-git", "untracked"]);
+export type VaultVersionHistoryUnavailableReason = typeof VaultVersionHistoryUnavailableReason.Type;
+
+export const VaultVersionHistoryEntry = Schema.Struct({
+  /** Full commit SHA (40 hex chars). */
+  hash: TrimmedNonEmptyString,
+  /** ISO-8601 commit timestamp from `%ai`. */
+  timestamp: TrimmedNonEmptyString,
+  /** First line of the commit message. */
+  message: Schema.String,
+});
+export type VaultVersionHistoryEntry = typeof VaultVersionHistoryEntry.Type;
+
+export const VaultGetVersionHistoryResult = Schema.Union([
+  Schema.Struct({
+    available: Schema.Literal(true),
+    revisions: Schema.Array(VaultVersionHistoryEntry),
+  }),
+  Schema.Struct({
+    available: Schema.Literal(false),
+    reason: VaultVersionHistoryUnavailableReason,
+  }),
+]);
+export type VaultGetVersionHistoryResult = typeof VaultGetVersionHistoryResult.Type;
+
+export const VaultRevertToVersionInput = Schema.Struct({
+  projectId: ProjectId,
+  relativePath: TrimmedNonEmptyString.check(Schema.isMaxLength(VAULT_PATH_MAX_LENGTH)),
+  /** Full commit SHA produced by `getVersionHistory`. */
+  hash: TrimmedNonEmptyString.check(Schema.isMaxLength(64)),
+});
+export type VaultRevertToVersionInput = typeof VaultRevertToVersionInput.Type;
+
+export const VaultRevertToVersionResult = Schema.Struct({
+  /** Hash of the new revert commit (or `null` if commit was skipped). */
+  newCommitHash: Schema.NullOr(TrimmedNonEmptyString),
+});
+export type VaultRevertToVersionResult = typeof VaultRevertToVersionResult.Type;
+
+export const VaultVersionHistoryErrorCode = Schema.Literals([
+  "PROJECT_NOT_FOUND",
+  "KIND_MISMATCH",
+  "PATH_ESCAPE",
+  "PATH_INVALID",
+  "NOT_FOUND",
+  "GIT_UNAVAILABLE",
+  "REVISION_NOT_FOUND",
+  "GIT_FAILED",
+  "WRITE_FAILED",
+]);
+export type VaultVersionHistoryErrorCode = typeof VaultVersionHistoryErrorCode.Type;
+
+export class VaultVersionHistoryError extends Schema.TaggedErrorClass<VaultVersionHistoryError>()(
+  "VaultVersionHistoryError",
+  {
+    code: VaultVersionHistoryErrorCode,
+    message: TrimmedNonEmptyString,
+    cause: Schema.optional(Schema.Defect),
+  },
+) {}
+
+/**
+ * Graph view (T26) — force-directed graph data derived from `vault_notes` and
+ * `vault_wikilinks`. Edges resolve target basenames to relative paths where
+ * possible; ambiguous or unresolved targets fall back to the basename string
+ * so the graph can still render orphaned link endpoints.
+ */
+export const VaultGetGraphInput = Schema.Struct({
+  projectId: ProjectId,
+});
+export type VaultGetGraphInput = typeof VaultGetGraphInput.Type;
+
+export const VaultGraphNode = Schema.Struct({
+  /** Stable id used for edge endpoints — relative path of the note. */
+  id: TrimmedNonEmptyString,
+  /** Display title (frontmatter title falls back to basename). */
+  title: TrimmedNonEmptyString,
+});
+export type VaultGraphNode = typeof VaultGraphNode.Type;
+
+export const VaultGraphEdge = Schema.Struct({
+  source: TrimmedNonEmptyString,
+  target: TrimmedNonEmptyString,
+  /**
+   * `true` when `target` resolved to a known note id; `false` when it is an
+   * unresolved wikilink basename (no matching `vault_notes` row).
+   */
+  resolved: Schema.Boolean,
+});
+export type VaultGraphEdge = typeof VaultGraphEdge.Type;
+
+export const VaultGetGraphResult = Schema.Struct({
+  nodes: Schema.Array(VaultGraphNode),
+  edges: Schema.Array(VaultGraphEdge),
+});
+export type VaultGetGraphResult = typeof VaultGetGraphResult.Type;

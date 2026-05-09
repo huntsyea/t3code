@@ -10,6 +10,7 @@ import {
   type SourceControlDiscoveryResult,
   type SourceControlProviderKind,
   type SourceControlRepositoryInfo,
+  type ThreadId,
 } from "@t3tools/contracts";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "@tanstack/react-router";
@@ -19,11 +20,15 @@ import {
   ArrowLeftIcon,
   ArrowUpIcon,
   CornerLeftUpIcon,
+  FilePlusIcon,
+  FileTextIcon,
   FolderIcon,
   FolderPlusIcon,
+  HistoryIcon,
   LinkIcon,
   MessageSquareIcon,
   MessageSquarePlusIcon,
+  NetworkIcon,
   SearchIcon,
   SettingsIcon,
   SquarePenIcon,
@@ -41,8 +46,15 @@ import {
 } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useCommandPaletteStore } from "../commandPaletteStore";
+import { useGraphViewStore } from "../graphViewStore";
 import { useVaultSearchStore } from "../vaultSearchStore";
+import { useVersionHistoryStore } from "../versionHistoryStore";
 import { openOrActivateChatTab } from "./vault/openChatTab";
+import {
+  createNoteFromTemplate,
+  listVaultTemplates,
+  type TemplateDescriptor,
+} from "./vault/Templates";
 import { readEnvironmentApi } from "../environmentApi";
 import { readPrimaryEnvironmentDescriptor, usePrimaryEnvironmentId } from "../environments/primary";
 import {
@@ -985,6 +997,112 @@ function OpenCommandPaletteDialog() {
     startAddProjectSourceSelection,
   ]);
 
+  const runTemplateInstantiation = useCallback(
+    async (input: {
+      readonly environmentId: EnvironmentId;
+      readonly projectId: ProjectId;
+      readonly threadId: ThreadId;
+      readonly template: TemplateDescriptor;
+    }) => {
+      const titleInput =
+        typeof window === "undefined"
+          ? null
+          : window.prompt(`New note from "${input.template.name}". Title:`, "");
+      if (titleInput === null) return;
+      const trimmed = titleInput.trim();
+      if (trimmed.length === 0) {
+        toastManager.add(
+          stackedThreadToast({
+            type: "error",
+            title: "Failed to create note",
+            description: "Note title cannot be empty.",
+          }),
+        );
+        return;
+      }
+      try {
+        await createNoteFromTemplate({
+          environmentId: input.environmentId,
+          projectId: input.projectId,
+          threadId: input.threadId,
+          template: input.template,
+          title: trimmed,
+        });
+        setOpen(false);
+      } catch (error) {
+        toastManager.add(
+          stackedThreadToast({
+            type: "error",
+            title: "Failed to create note",
+            description: errorMessage(error),
+          }),
+        );
+      }
+    },
+    [setOpen],
+  );
+
+  const openNewFromTemplateFlow = useCallback(
+    async (input: {
+      readonly environmentId: EnvironmentId;
+      readonly projectId: ProjectId;
+      readonly threadId: ThreadId;
+    }) => {
+      let templates: ReadonlyArray<TemplateDescriptor> = [];
+      try {
+        templates = await listVaultTemplates({
+          environmentId: input.environmentId,
+          projectId: input.projectId,
+        });
+      } catch (error) {
+        toastManager.add(
+          stackedThreadToast({
+            type: "error",
+            title: "Failed to load templates",
+            description: errorMessage(error),
+          }),
+        );
+        return;
+      }
+
+      if (templates.length === 0) {
+        toastManager.add(
+          stackedThreadToast({
+            type: "error",
+            title: "No templates available",
+            description: `Add markdown templates to ${".atlas/templates"} in this vault.`,
+          }),
+        );
+        return;
+      }
+
+      if (templates.length === 1) {
+        const onlyTemplate = templates[0];
+        if (!onlyTemplate) return;
+        await runTemplateInstantiation({ ...input, template: onlyTemplate });
+        return;
+      }
+
+      const templateItems: CommandPaletteActionItem[] = templates.map((template) => ({
+        kind: "action",
+        value: `action:new-from-template:${template.relativePath}`,
+        searchTerms: [template.name, template.relativePath, "template"],
+        title: template.name,
+        description: template.relativePath,
+        icon: <FileTextIcon className={ITEM_ICON_CLASS} />,
+        run: async () => {
+          await runTemplateInstantiation({ ...input, template });
+        },
+      }));
+
+      pushPaletteView({
+        addonIcon: <FilePlusIcon className={ADDON_ICON_CLASS} />,
+        groups: [{ value: "templates", label: "Templates", items: templateItems }],
+      });
+    },
+    [runTemplateInstantiation],
+  );
+
   useLayoutEffect(() => {
     if (openIntent?.kind !== "add-project") {
       return;
@@ -1042,10 +1160,12 @@ function OpenCommandPaletteDialog() {
     activeProjectKind === "vault" &&
     activeThread &&
     activeThread.environmentId &&
-    activeThread.id
+    activeThread.id &&
+    activeThread.projectId
   ) {
     const vaultThreadId = activeThread.id;
     const vaultEnvironmentId = activeThread.environmentId;
+    const vaultProjectId = activeThread.projectId;
     const vaultThreadTitle = activeThread.title;
     actionItems.push({
       kind: "action",
@@ -1069,6 +1189,48 @@ function OpenCommandPaletteDialog() {
       icon: <SearchIcon className={ITEM_ICON_CLASS} />,
       run: async () => {
         useVaultSearchStore.getState().setOpen(true);
+      },
+    });
+    actionItems.push({
+      kind: "action",
+      value: "action:open-graph-view",
+      searchTerms: ["graph", "graph view", "open graph", "vault graph", "links"],
+      title: "Open graph view",
+      icon: <NetworkIcon className={ITEM_ICON_CLASS} />,
+      run: async () => {
+        useGraphViewStore.getState().setOpen(true);
+      },
+    });
+    actionItems.push({
+      kind: "action",
+      value: "action:show-version-history",
+      searchTerms: [
+        "version history",
+        "history",
+        "revisions",
+        "git log",
+        "previous versions",
+        "revert",
+      ],
+      title: "Show version history",
+      icon: <HistoryIcon className={ITEM_ICON_CLASS} />,
+      run: async () => {
+        useVersionHistoryStore.getState().openFor(null);
+      },
+    });
+    actionItems.push({
+      kind: "action",
+      value: "action:new-from-template",
+      searchTerms: ["new note", "template", "from template", "new from template", "create note"],
+      title: "New from template",
+      icon: <FilePlusIcon className={ITEM_ICON_CLASS} />,
+      keepOpen: true,
+      run: async () => {
+        await openNewFromTemplateFlow({
+          environmentId: vaultEnvironmentId,
+          projectId: vaultProjectId,
+          threadId: vaultThreadId,
+        });
       },
     });
   }
