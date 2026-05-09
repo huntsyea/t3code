@@ -119,6 +119,7 @@ it.effect("trims branded ids and command string fields at decode boundaries", ()
       type: "project.create",
       commandId: " cmd-1 ",
       projectId: " project-1 ",
+      kind: "code",
       title: " Project Title ",
       workspaceRoot: " /tmp/workspace ",
       defaultModelSelection: {
@@ -145,6 +146,7 @@ it.effect("decodes project.create with createWorkspaceRootIfMissing enabled", ()
       type: "project.create",
       commandId: "cmd-1",
       projectId: "project-1",
+      kind: "vault",
       title: "Project Title",
       workspaceRoot: "/tmp/workspace",
       createWorkspaceRootIfMissing: true,
@@ -159,6 +161,7 @@ it.effect("decodes historical project.created payloads with a default provider",
   Effect.gen(function* () {
     const parsed = yield* decodeProjectCreatedPayload({
       projectId: "project-1",
+      kind: "code",
       title: "Project Title",
       workspaceRoot: "/tmp/workspace",
       defaultModelSelection: {
@@ -194,6 +197,7 @@ it.effect("rejects command fields that become empty after trim", () =>
         type: "project.create",
         commandId: "cmd-1",
         projectId: "project-1",
+        kind: "code",
         title: "  ",
         workspaceRoot: "/tmp/workspace",
         createdAt: "2026-01-01T00:00:00.000Z",
