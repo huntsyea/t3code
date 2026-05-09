@@ -257,6 +257,7 @@ function setStoreThreads(threads: ReadonlyArray<ReturnType<typeof makeThread>>) 
       [projectId]: {
         id: projectId,
         environmentId: localEnvironmentId,
+        kind: "code",
         name: "Project",
         cwd: "/tmp/project",
         defaultModelSelection: {

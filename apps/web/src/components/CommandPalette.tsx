@@ -414,6 +414,7 @@ function OpenCommandPaletteDialog() {
     null,
   );
   const [isPickingProjectFolder, setIsPickingProjectFolder] = useState(false);
+  const [addProjectAsVault, setAddProjectAsVault] = useState(false);
   const [addProjectCloneFlow, setAddProjectCloneFlow] = useState<AddProjectCloneFlow | null>(null);
   const [isRemoteProjectLookingUp, setIsRemoteProjectLookingUp] = useState(false);
   const [isRemoteProjectCloning, setIsRemoteProjectCloning] = useState(false);
@@ -755,6 +756,7 @@ function OpenCommandPaletteDialog() {
     (environmentId: EnvironmentId): void => {
       setAddProjectEnvironmentId(environmentId);
       setAddProjectCloneFlow(null);
+      setAddProjectAsVault(false);
       pushPaletteView({
         addonIcon: <FolderPlusIcon className={ADDON_ICON_CLASS} />,
         groups: [],
@@ -943,6 +945,7 @@ function OpenCommandPaletteDialog() {
   );
 
   const openAddProjectFlow = useCallback(() => {
+    setAddProjectAsVault(false);
     if (addProjectEnvironmentOptions.length > 1) {
       pushPaletteView({
         addonIcon: <FolderPlusIcon className={ADDON_ICON_CLASS} />,
@@ -1135,6 +1138,7 @@ function OpenCommandPaletteDialog() {
           type: "project.create",
           commandId: newCommandId(),
           projectId,
+          kind: addProjectAsVault ? "vault" : "code",
           title: inferProjectTitleFromPath(cwd),
           workspaceRoot: cwd,
           createWorkspaceRootIfMissing: true,
@@ -1159,6 +1163,7 @@ function OpenCommandPaletteDialog() {
       }
     },
     [
+      addProjectAsVault,
       browseEnvironmentId,
       browseEnvironmentPlatform,
       currentProjectCwdForBrowse,
@@ -1720,6 +1725,20 @@ function OpenCommandPaletteDialog() {
               <span className={cn("text-muted-foreground/80")}>Close</span>
             </KbdGroup>
           </div>
+          {isBrowsing && addProjectCloneFlow === null ? (
+            <Button
+              data-testid="add-project-vault-toggle"
+              variant={addProjectAsVault ? "default" : "outline"}
+              size="xs"
+              className="h-auto px-2 text-xs"
+              aria-pressed={addProjectAsVault}
+              onClick={() => {
+                setAddProjectAsVault((current) => !current);
+              }}
+            >
+              Open as vault
+            </Button>
+          ) : null}
           {canOpenProjectFromFileManager ? (
             <Button
               variant="ghost"

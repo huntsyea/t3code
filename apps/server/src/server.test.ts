@@ -2467,6 +2467,7 @@ it.layer(NodeServices.layer)("server router seam", (it) => {
             type: "project.create",
             commandId: CommandId.make("cmd-project-create-missing-root"),
             projectId: ProjectId.make("project-create-missing-root"),
+            kind: "code",
             title: "New Project",
             workspaceRoot: missingWorkspaceRoot,
             createWorkspaceRootIfMissing: true,
@@ -3356,6 +3357,7 @@ it.layer(NodeServices.layer)("server router seam", (it) => {
                 type: "project.created",
                 payload: {
                   projectId: defaultProjectId,
+                  kind: "code",
                   title: "Default Project",
                   workspaceRoot: "/tmp/default-project",
                   defaultModelSelection,

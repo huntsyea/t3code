@@ -332,6 +332,7 @@ function createSnapshotForTargetUser(options: {
     projects: [
       {
         id: PROJECT_ID,
+        kind: "code",
         title: "Project",
         workspaceRoot: "/repo/project",
         defaultModelSelection: {
@@ -817,6 +818,7 @@ function createSnapshotWithSecondaryProject(options?: {
       ...snapshot.projects,
       {
         id: SECOND_PROJECT_ID,
+        kind: "code",
         title: "Docs Portal",
         workspaceRoot: "/repo/clients/docs-portal",
         defaultModelSelection: { instanceId: ProviderInstanceId.make("codex"), model: "gpt-5" },

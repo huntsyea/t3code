@@ -30,6 +30,7 @@
 - Phase 3 rebrand is IRREVERSIBLE — only after Phase 2 GO/NO-GO gate
 
 ## Vault Write Boundary
+
 - `SafeVaultWrite` must realpath both the vault root and the target path; macOS temp roots may resolve through `/private/var`, so comparing against the canonical root avoids false escape rejections.
 - Missing nested directories need recursive ancestor resolution before the final atomic write; plain `realpath(parent)` is not enough for fresh note paths like `notes/today.txt`.
 - The vault discipline test should exempt `SafeVaultWrite.ts` itself; it is the only intentional direct `atomicWrite` import under `apps/server/src/vault/`.
@@ -39,3 +40,7 @@
 - Branded ids already exist in `packages/contracts/src/baseSchemas.ts`: `ThreadId`, `ProjectId`, `CommandId`, `EventId`, `MessageId`, `TurnId`, etc.
 - Reuse `ThreadId` for chat tabs and import `ProjectId`/`ThreadId` from `./baseSchemas.ts` in new tab contracts.
 - Contract re-exports flow through `packages/contracts/src/index.ts`; add new schema files there so downstream imports stay stable.
+## 2026-05-09
+- `project.create` / `project.created` now need `kind` threaded through contracts, decider, projector, persistence, and shell snapshot mapping.
+- `projection_projects.kind` is safest as a defaulted SQLite column with PRAGMA-guarded migration; existing rows stay `code`.
+- Web project state needed a compatibility default so older in-memory fixtures still map cleanly while project `kind` is rolling out.

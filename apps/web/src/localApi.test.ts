@@ -367,6 +367,7 @@ describe("wsApi", () => {
       sequence: 1,
       project: {
         id: ProjectId.make("project-1"),
+        kind: "code",
         title: "Project",
         workspaceRoot: "/tmp/workspace",
         defaultModelSelection: {
@@ -433,6 +434,7 @@ describe("wsApi", () => {
       type: "project.create",
       commandId: CommandId.make("cmd-1"),
       projectId: ProjectId.make("project-1"),
+      kind: "code",
       title: "Project",
       workspaceRoot: "/tmp/project",
       defaultModelSelection: {

@@ -256,6 +256,7 @@ describe("ProviderRuntimeIngestion", () => {
         type: "project.create",
         commandId: CommandId.make("cmd-provider-project-create"),
         projectId: asProjectId("project-1"),
+        kind: "code",
         title: "Provider Project",
         workspaceRoot,
         defaultModelSelection: {

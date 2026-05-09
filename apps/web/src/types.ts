@@ -84,6 +84,7 @@ export interface TurnDiffSummary {
 export interface Project {
   id: ProjectId;
   environmentId: EnvironmentId;
+  kind?: "code" | "vault";
   name: string;
   cwd: string;
   repositoryIdentity?: RepositoryIdentity | null;

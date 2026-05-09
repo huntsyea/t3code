@@ -240,6 +240,7 @@ describe("OrchestrationEngine", () => {
         type: "project.create",
         commandId: CommandId.make("cmd-project-1-create"),
         projectId: asProjectId("project-1"),
+        kind: "code",
         title: "Project 1",
         workspaceRoot: "/tmp/project-1",
         defaultModelSelection: {
@@ -300,6 +301,7 @@ describe("OrchestrationEngine", () => {
         type: "project.create",
         commandId: CommandId.make("cmd-project-archive-create"),
         projectId: asProjectId("project-archive"),
+        kind: "code",
         title: "Project Archive",
         workspaceRoot: "/tmp/project-archive",
         defaultModelSelection: {
@@ -365,6 +367,7 @@ describe("OrchestrationEngine", () => {
         type: "project.create",
         commandId: CommandId.make("cmd-project-replay-create"),
         projectId: asProjectId("project-replay"),
+        kind: "code",
         title: "Replay Project",
         workspaceRoot: "/tmp/project-replay",
         defaultModelSelection: {
@@ -423,6 +426,7 @@ describe("OrchestrationEngine", () => {
         type: "project.create",
         commandId: CommandId.make("cmd-project-stream-create"),
         projectId: asProjectId("project-stream"),
+        kind: "code",
         title: "Stream Project",
         workspaceRoot: "/tmp/project-stream",
         defaultModelSelection: {
@@ -484,6 +488,7 @@ describe("OrchestrationEngine", () => {
         type: "project.create",
         commandId: CommandId.make("cmd-project-ack-create"),
         projectId: asProjectId("project-ack"),
+        kind: "code",
         title: "Ack Project",
         workspaceRoot: "/tmp/project-ack",
         defaultModelSelection: {
@@ -573,6 +578,7 @@ describe("OrchestrationEngine", () => {
         type: "project.create",
         commandId: CommandId.make("cmd-project-turn-diff-create"),
         projectId: asProjectId("project-turn-diff"),
+        kind: "code",
         title: "Turn Diff Project",
         workspaceRoot: "/tmp/project-turn-diff",
         defaultModelSelection: {
@@ -692,6 +698,7 @@ describe("OrchestrationEngine", () => {
         type: "project.create",
         commandId: CommandId.make("cmd-project-flaky-create"),
         projectId: asProjectId("project-flaky"),
+        kind: "code",
         title: "Flaky Project",
         workspaceRoot: "/tmp/project-flaky",
         defaultModelSelection: {
@@ -795,6 +802,7 @@ describe("OrchestrationEngine", () => {
         type: "project.create",
         commandId: CommandId.make("cmd-project-atomic-create"),
         projectId: asProjectId("project-atomic"),
+        kind: "code",
         title: "Atomic Project",
         workspaceRoot: "/tmp/project-atomic",
         defaultModelSelection: {
@@ -937,6 +945,7 @@ describe("OrchestrationEngine", () => {
         type: "project.create",
         commandId: CommandId.make("cmd-project-sync-create"),
         projectId: asProjectId("project-sync"),
+        kind: "code",
         title: "Sync Project",
         workspaceRoot: "/tmp/project-sync",
         defaultModelSelection: {
@@ -1024,6 +1033,7 @@ describe("OrchestrationEngine", () => {
         type: "project.create",
         commandId: CommandId.make("cmd-project-duplicate-create"),
         projectId: asProjectId("project-duplicate"),
+        kind: "code",
         title: "Duplicate Project",
         workspaceRoot: "/tmp/project-duplicate",
         defaultModelSelection: {
