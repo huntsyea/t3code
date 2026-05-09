@@ -280,7 +280,7 @@ export const makeVaultWatcherWithOptions = (options: VaultWatcherFactoryOptions 
                 return Effect.fail(
                   new VaultWatcherError({
                     code: "KIND_MISMATCH",
-                    message: `Project ${projectId} is not a vault (kind=${project.kind ?? "code"})`,
+                    message: `Project ${projectId} is not a vault (kind=${project.kind ?? "unknown"})`,
                   }),
                 );
               }

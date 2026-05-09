@@ -127,7 +127,7 @@ const seedProjectAndThread = (harness: OrchestrationIntegrationHarness) =>
       type: "project.create",
       commandId: CommandId.make("cmd-project-create"),
       projectId: PROJECT_ID,
-      kind: "code",
+      kind: "vault",
       title: "Integration Project",
       workspaceRoot: harness.workspaceDir,
       defaultModelSelection: {
@@ -278,7 +278,7 @@ it.live.skipIf(!process.env.CODEX_BINARY_PATH)(
           type: "project.create",
           commandId: CommandId.make("cmd-project-create-real-codex"),
           projectId: PROJECT_ID,
-          kind: "code",
+          kind: "vault",
           title: "Integration Project",
           workspaceRoot: harness.workspaceDir,
           defaultModelSelection: {

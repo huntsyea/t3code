@@ -92,7 +92,7 @@ function makeState(thread: Thread): AppState {
   const project = {
     id: projectId,
     environmentId: thread.environmentId,
-    kind: "code" as const,
+    kind: "vault" as const,
     name: "Project",
     cwd: "/tmp/project",
     defaultModelSelection: {
@@ -496,7 +496,7 @@ describe("incremental orchestration updates", () => {
         [originalProjectId]: {
           id: originalProjectId,
           environmentId: localEnvironmentId,
-          kind: "code",
+          kind: "vault",
           name: "Project",
           cwd: "/tmp/project",
           defaultModelSelection: {
@@ -514,7 +514,7 @@ describe("incremental orchestration updates", () => {
       state,
       makeEvent("project.created", {
         projectId: recreatedProjectId,
-        kind: "code",
+        kind: "vault",
         title: "Project Recreated",
         workspaceRoot: "/tmp/project",
         defaultModelSelection: {
@@ -553,7 +553,7 @@ describe("incremental orchestration updates", () => {
         [originalProjectId]: {
           id: originalProjectId,
           environmentId: localEnvironmentId,
-          kind: "code",
+          kind: "vault",
           name: "Project 1",
           cwd: "/tmp/project-1",
           defaultModelSelection: {
@@ -567,7 +567,7 @@ describe("incremental orchestration updates", () => {
         [recreatedProjectId]: {
           id: recreatedProjectId,
           environmentId: localEnvironmentId,
-          kind: "code",
+          kind: "vault",
           name: "Project 2",
           cwd: "/tmp/project-2",
           defaultModelSelection: {

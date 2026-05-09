@@ -356,7 +356,7 @@ describe("CheckpointReactor", () => {
         type: "project.create",
         commandId: CommandId.make("cmd-project-create"),
         projectId: asProjectId("project-1"),
-        kind: "code",
+        kind: "vault",
         title: "Test Project",
         workspaceRoot: options?.projectWorkspaceRoot ?? cwd,
         defaultModelSelection: {

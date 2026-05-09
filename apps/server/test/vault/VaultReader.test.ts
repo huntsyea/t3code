@@ -38,7 +38,7 @@ async function makeVaultFixture(): Promise<VaultFixture> {
 }
 
 function makeProjectionProject(input: {
-  readonly kind: "vault" | "code";
+  readonly kind: "vault";
   readonly workspaceRoot: string;
 }): ProjectionProject {
   return {
@@ -115,36 +115,6 @@ describe("VaultReader.readNote", () => {
       expect(result.size).toBe(Buffer.byteLength("# Today\n\nHello.", "utf8"));
       expect(typeof result.mtime).toBe("string");
       expect(result.mtime).toMatch(/^\d{4}-\d{2}-\d{2}T/);
-    } finally {
-      await fs.rm(parent, { recursive: true, force: true });
-    }
-  });
-
-  it("rejects when project kind is not 'vault'", async () => {
-    const { vaultRoot, parent } = await makeVaultFixture();
-    try {
-      await fs.writeFile(path.join(vaultRoot, "note.md"), "blocked");
-
-      const layer = makeTestLayer({
-        project: Option.some(makeProjectionProject({ kind: "code", workspaceRoot: vaultRoot })),
-      });
-
-      const exit = await Effect.runPromiseExit(
-        Effect.gen(function* () {
-          const reader = yield* VaultReader;
-          return yield* reader.readNote({
-            projectId: TEST_PROJECT_ID,
-            relativePath: "note.md",
-          });
-        }).pipe(Effect.provide(layer)),
-      );
-
-      expect(Exit.isFailure(exit)).toBe(true);
-      if (Exit.isFailure(exit)) {
-        const cause = exit.cause;
-        const error = JSON.stringify(cause);
-        expect(error).toContain("KIND_MISMATCH");
-      }
     } finally {
       await fs.rm(parent, { recursive: true, force: true });
     }
@@ -351,33 +321,6 @@ describe("VaultReader.listEntries", () => {
       const names = result.entries.map((entry) => entry.name);
       expect(names).toEqual(["sub", "top.md"]);
       expect(names).not.toContain("child.md");
-    } finally {
-      await fs.rm(parent, { recursive: true, force: true });
-    }
-  });
-
-  it("rejects directory listing when project kind is not 'vault'", async () => {
-    const { vaultRoot, parent } = await makeVaultFixture();
-    try {
-      const layer = makeTestLayer({
-        project: Option.some(makeProjectionProject({ kind: "code", workspaceRoot: vaultRoot })),
-      });
-
-      const exit = await Effect.runPromiseExit(
-        Effect.gen(function* () {
-          const reader = yield* VaultReader;
-          return yield* reader.listEntries({
-            projectId: TEST_PROJECT_ID,
-            relativeDir: "",
-          });
-        }).pipe(Effect.provide(layer)),
-      );
-
-      expect(Exit.isFailure(exit)).toBe(true);
-      if (Exit.isFailure(exit)) {
-        const error = JSON.stringify(exit.cause);
-        expect(error).toContain("KIND_MISMATCH");
-      }
     } finally {
       await fs.rm(parent, { recursive: true, force: true });
     }

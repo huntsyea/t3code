@@ -341,7 +341,7 @@ export const makeVaultRename = Effect.gen(function* () {
               return Effect.fail(
                 new VaultRenameError({
                   code: "KIND_MISMATCH",
-                  message: `Project ${projectId} is not a vault (kind=${project.kind ?? "code"})`,
+                  message: `Project ${projectId} is not a vault (kind=${project.kind ?? "unknown"})`,
                 }),
               );
             }

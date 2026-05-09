@@ -37,7 +37,7 @@ async function seedReadModel(): Promise<OrchestrationReadModel> {
       metadata: {},
       payload: {
         projectId: asProjectId("project-delete"),
-        kind: "code",
+        kind: "vault",
         title: "Project Delete",
         workspaceRoot: "/tmp/project-delete",
         defaultModelSelection: null,

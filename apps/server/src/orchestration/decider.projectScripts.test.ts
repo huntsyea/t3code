@@ -29,7 +29,7 @@ describe("decider project scripts", () => {
           type: "project.create",
           commandId: CommandId.make("cmd-project-create-scripts"),
           projectId: asProjectId("project-scripts"),
-          kind: "code",
+          kind: "vault",
           title: "Scripts",
           workspaceRoot: "/tmp/scripts",
           createdAt: now,
@@ -60,7 +60,7 @@ describe("decider project scripts", () => {
         metadata: {},
         payload: {
           projectId: asProjectId("project-scripts"),
-          kind: "code",
+          kind: "vault",
           title: "Scripts",
           workspaceRoot: "/tmp/scripts",
           defaultModelSelection: null,
@@ -115,7 +115,7 @@ describe("decider project scripts", () => {
         metadata: {},
         payload: {
           projectId: asProjectId("project-1"),
-          kind: "code",
+          kind: "vault",
           title: "Project",
           workspaceRoot: "/tmp/project",
           defaultModelSelection: null,
@@ -217,7 +217,7 @@ describe("decider project scripts", () => {
         metadata: {},
         payload: {
           projectId: asProjectId("project-1"),
-          kind: "code",
+          kind: "vault",
           title: "Project",
           workspaceRoot: "/tmp/project",
           defaultModelSelection: null,
@@ -300,7 +300,7 @@ describe("decider project scripts", () => {
         metadata: {},
         payload: {
           projectId: asProjectId("project-1"),
-          kind: "code",
+          kind: "vault",
           title: "Project",
           workspaceRoot: "/tmp/project",
           defaultModelSelection: null,

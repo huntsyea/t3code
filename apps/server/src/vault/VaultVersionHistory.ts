@@ -217,7 +217,7 @@ export const makeVaultVersionHistory = Effect.gen(function* () {
               return Effect.fail(
                 new VaultVersionHistoryError({
                   code: "KIND_MISMATCH",
-                  message: `Project ${projectId} is not a vault (kind=${project.kind ?? "code"})`,
+                  message: `Project ${projectId} is not a vault (kind=${project.kind ?? "unknown"})`,
                 }),
               );
             }

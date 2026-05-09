@@ -3576,7 +3576,6 @@ export default function ChatView(props: ChatViewProps) {
           diffToggleShortcutLabel={diffPanelShortcutLabel}
           gitCwd={gitCwd}
           diffOpen={diffOpen}
-          showFileTreeToggle={activeProject?.kind === "vault"}
           fileTreeOpen={fileTreeOpen}
           onRunProjectScript={runProjectScript}
           onAddProjectScript={saveProjectScript}
@@ -3770,7 +3769,7 @@ export default function ChatView(props: ChatViewProps) {
         </div>
         {/* end chat column */}
 
-        {activeProject?.kind === "vault" && fileTreeOpen ? (
+        {fileTreeOpen && activeProject ? (
           <div className="hidden w-72 shrink-0 lg:flex">
             <VaultFileTree
               threadId={activeThread.id}
@@ -3780,7 +3779,7 @@ export default function ChatView(props: ChatViewProps) {
           </div>
         ) : null}
 
-        {activeProject?.kind === "vault" && activeThread ? (
+        {vaultSearchOpen && activeProject ? (
           <VaultSearchPanel
             open={vaultSearchOpen}
             onOpenChange={setVaultSearchOpen}
@@ -3790,7 +3789,7 @@ export default function ChatView(props: ChatViewProps) {
           />
         ) : null}
 
-        {activeProject?.kind === "vault" && activeThread ? (
+        {graphViewOpen && activeProject ? (
           <GraphView
             open={graphViewOpen}
             onOpenChange={setGraphViewOpen}
@@ -3800,7 +3799,7 @@ export default function ChatView(props: ChatViewProps) {
           />
         ) : null}
 
-        {activeProject?.kind === "vault" && activeThread ? (
+        {versionHistoryOpen && activeProject ? (
           <VersionHistoryPanel
             open={versionHistoryOpen}
             onOpenChange={(open) => {

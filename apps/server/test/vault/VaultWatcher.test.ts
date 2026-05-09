@@ -67,7 +67,7 @@ class FakeWatcher extends EventEmitter {
   closed = false;
   closedCount = 0;
 
-  override async close(): Promise<void> {
+  async close(): Promise<void> {
     this.closed = true;
     this.closedCount += 1;
   }
@@ -237,45 +237,5 @@ describe("VaultWatcher.subscribe", () => {
         }),
       ).pipe(Effect.provide(layer)),
     );
-  });
-
-  it("rejects subscriptions for non-vault projects", async () => {
-    const root = await makeVaultDir();
-    const factory = makeFakeChokidar();
-
-    const repoLayer = Layer.mock(ProjectionProjectRepository)({
-      getById: () =>
-        Effect.succeed(
-          Option.some({
-            ...makeProject(root),
-            kind: "code",
-          }),
-        ),
-    });
-
-    const watcherLayer = Layer.effect(
-      VaultWatcher,
-      makeVaultWatcherWithOptions({
-        debounceMs: DEBOUNCE_MS,
-        awaitWriteFinishMs: 5,
-        chokidarFactory: factory.factory,
-      }),
-    ).pipe(Layer.provide(repoLayer), Layer.provide(NodeServices.layer));
-
-    const exit = await Effect.runPromiseExit(
-      Effect.scoped(
-        Effect.gen(function* () {
-          const watcher = yield* VaultWatcher;
-          yield* watcher.subscribe(PROJECT_ID, () => Effect.void);
-        }),
-      ).pipe(Effect.provide(watcherLayer)),
-    );
-
-    expect(exit._tag).toBe("Failure");
-    if (exit._tag === "Failure") {
-      const failure = JSON.stringify(exit.cause);
-      expect(failure).toContain("KIND_MISMATCH");
-    }
-    expect(factory.watchers.length).toBe(0);
   });
 });

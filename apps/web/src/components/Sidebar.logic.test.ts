@@ -702,7 +702,7 @@ function makeProject(overrides: Partial<Project> = {}): Project {
   return {
     id: ProjectId.make("project-1"),
     environmentId: localEnvironmentId,
-    kind: "code",
+    kind: "vault",
     name: "Project",
     cwd: "/tmp/project",
     defaultModelSelection: {

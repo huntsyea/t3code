@@ -348,7 +348,7 @@ const projectAddCommand = Command.make("add", {
           type: "project.create",
           commandId: CommandId.make(crypto.randomUUID()),
           projectId,
-          kind: "code",
+          kind: "vault",
           title,
           workspaceRoot,
           defaultModelSelection: getAutoBootstrapDefaultModelSelection(),

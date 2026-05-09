@@ -290,7 +290,7 @@ const makeProjectionSnapshotQuery = Effect.gen(function* () {
       sql`
         SELECT
           project_id AS "projectId",
-          kind,
+          CASE WHEN kind = 'code' THEN 'vault' ELSE kind END AS "kind",
           title,
           workspace_root AS "workspaceRoot",
           default_model_selection_json AS "defaultModelSelection",
@@ -440,7 +440,7 @@ const makeProjectionSnapshotQuery = Effect.gen(function* () {
           thread_id AS "threadId",
           turn_id AS "turnId",
           tone,
-          kind,
+          CASE WHEN kind = 'code' THEN 'vault' ELSE kind END AS "kind",
           summary,
           payload_json AS "payload",
           sequence,
@@ -652,7 +652,7 @@ const makeProjectionSnapshotQuery = Effect.gen(function* () {
       sql`
         SELECT
           project_id AS "projectId",
-          kind,
+          CASE WHEN kind = 'code' THEN 'vault' ELSE kind END AS "kind",
           title,
           workspace_root AS "workspaceRoot",
           default_model_selection_json AS "defaultModelSelection",

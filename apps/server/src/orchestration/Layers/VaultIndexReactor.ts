@@ -407,7 +407,6 @@ const make = Effect.gen(function* () {
       Effect.orElseSucceed(() => [] as ReadonlyArray<never>),
     );
     for (const project of allProjects) {
-      if (project.kind !== "vault") continue;
       if (project.deletedAt !== null) continue;
       yield* vaultWatcher.start(project.projectId, project.workspaceRoot).pipe(
         Effect.tapError((error) =>
@@ -461,12 +460,6 @@ const make = Effect.gen(function* () {
         });
       }
       const project = projectOption.value;
-      if (project.kind !== "vault") {
-        return yield* new VaultWatcherError({
-          code: "KIND_MISMATCH",
-          message: `Project ${projectId} is not a vault (kind=${project.kind ?? "code"})`,
-        });
-      }
 
       yield* vaultWatcher.start(projectId, project.workspaceRoot);
       const entry = yield* ensureEntry(projectId, project.workspaceRoot);

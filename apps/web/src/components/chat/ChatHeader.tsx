@@ -36,7 +36,6 @@ interface ChatHeaderProps {
   diffToggleShortcutLabel: string | null;
   gitCwd: string | null;
   diffOpen: boolean;
-  showFileTreeToggle: boolean;
   fileTreeOpen: boolean;
   onRunProjectScript: (script: ProjectScript) => void;
   onAddProjectScript: (input: NewProjectScriptInput) => Promise<void>;
@@ -77,7 +76,6 @@ export const ChatHeader = memo(function ChatHeader({
   diffToggleShortcutLabel,
   gitCwd,
   diffOpen,
-  showFileTreeToggle,
   fileTreeOpen,
   onRunProjectScript,
   onAddProjectScript,
@@ -189,26 +187,24 @@ export const ChatHeader = memo(function ChatHeader({
                 : "Toggle diff panel"}
           </TooltipPopup>
         </Tooltip>
-        {showFileTreeToggle && (
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Toggle
-                  className="shrink-0"
-                  pressed={fileTreeOpen}
-                  onPressedChange={onToggleFileTree}
-                  aria-label="Toggle vault file tree"
-                  variant="outline"
-                  size="xs"
-                  data-testid="header-files-toggle"
-                >
-                  <FolderTreeIcon className="size-3" />
-                </Toggle>
-              }
-            />
-            <TooltipPopup side="bottom">Toggle vault file tree</TooltipPopup>
-          </Tooltip>
-        )}
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Toggle
+                className="shrink-0"
+                pressed={fileTreeOpen}
+                onPressedChange={onToggleFileTree}
+                aria-label="Toggle vault file tree"
+                variant="outline"
+                size="xs"
+                data-testid="header-files-toggle"
+              >
+                <FolderTreeIcon className="size-3" />
+              </Toggle>
+            }
+          />
+          <TooltipPopup side="bottom">Toggle vault file tree</TooltipPopup>
+        </Tooltip>
       </div>
     </div>
   );

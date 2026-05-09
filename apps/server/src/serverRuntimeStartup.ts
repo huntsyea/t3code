@@ -196,7 +196,7 @@ export const resolveAutoBootstrapWelcomeTargets = Effect.gen(function* () {
           type: "project.create",
           commandId: CommandId.make(crypto.randomUUID()),
           projectId: nextProjectId,
-          kind: "code",
+          kind: "vault",
           title: bootstrapProjectTitle,
           workspaceRoot: serverConfig.cwd,
           defaultModelSelection: nextProjectDefaultModelSelection,

@@ -33,7 +33,7 @@ async function makeVaultFixture(): Promise<VaultFixture> {
 }
 
 function makeProjectionProject(input: {
-  readonly kind: "vault" | "code";
+  readonly kind: "vault";
   readonly workspaceRoot: string;
 }): ProjectionProject {
   return {
@@ -246,35 +246,6 @@ describe("VaultRename.renameNote", () => {
       expect(Exit.isFailure(exit)).toBe(true);
       if (Exit.isFailure(exit)) {
         expect(JSON.stringify(exit.cause)).toContain("NOT_FOUND");
-      }
-    } finally {
-      await fs.rm(parent, { recursive: true, force: true });
-    }
-  });
-
-  it("rejects when the project is not a vault", async () => {
-    const { vaultRoot, parent } = await makeVaultFixture();
-    try {
-      await fs.writeFile(path.join(vaultRoot, "n.md"), "x");
-
-      const layer = makeTestLayer({
-        project: Option.some(makeProjectionProject({ kind: "code", workspaceRoot: vaultRoot })),
-      });
-
-      const exit = await Effect.runPromiseExit(
-        Effect.gen(function* () {
-          const rename = yield* VaultRename;
-          return yield* rename.renameNote({
-            projectId: TEST_PROJECT_ID,
-            oldRelativePath: "n.md",
-            newRelativePath: "n2.md",
-          });
-        }).pipe(Effect.provide(layer)),
-      );
-
-      expect(Exit.isFailure(exit)).toBe(true);
-      if (Exit.isFailure(exit)) {
-        expect(JSON.stringify(exit.cause)).toContain("KIND_MISMATCH");
       }
     } finally {
       await fs.rm(parent, { recursive: true, force: true });

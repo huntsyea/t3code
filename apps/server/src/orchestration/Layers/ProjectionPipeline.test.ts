@@ -72,7 +72,7 @@ it.layer(BaseTestLayer)("OrchestrationProjectionPipeline", (it) => {
         metadata: {},
         payload: {
           projectId: ProjectId.make("project-1"),
-          kind: "code",
+          kind: "vault",
           title: "Project 1",
           workspaceRoot: "/tmp/project-1",
           defaultModelSelection: null,
@@ -347,7 +347,7 @@ it.layer(BaseTestLayer)("OrchestrationProjectionPipeline", (it) => {
           metadata: {},
           payload: {
             projectId: ProjectId.make("project-clear-attachments"),
-            kind: "code",
+            kind: "vault",
             title: "Project Clear Attachments",
             workspaceRoot: "/tmp/project-clear-attachments",
             defaultModelSelection: null,
@@ -477,7 +477,7 @@ it.layer(
         metadata: {},
         payload: {
           projectId: ProjectId.make("project-overwrite"),
-          kind: "code",
+          kind: "vault",
           title: "Project Overwrite",
           workspaceRoot: "/tmp/project-overwrite",
           defaultModelSelection: null,
@@ -627,7 +627,7 @@ it.layer(
         metadata: {},
         payload: {
           projectId: ProjectId.make("project-rollback"),
-          kind: "code",
+          kind: "vault",
           title: "Project Rollback",
           workspaceRoot: "/tmp/project-rollback",
           defaultModelSelection: null,
@@ -757,7 +757,7 @@ it.layer(
         metadata: {},
         payload: {
           projectId: ProjectId.make("project-revert-files"),
-          kind: "code",
+          kind: "vault",
           title: "Project Revert Files",
           workspaceRoot: "/tmp/project-revert-files",
           defaultModelSelection: null,
@@ -966,7 +966,7 @@ it.layer(Layer.fresh(makeProjectionPipelinePrefixedTestLayer("t3-projection-atta
           metadata: {},
           payload: {
             projectId: ProjectId.make("project-delete-files"),
-            kind: "code",
+            kind: "vault",
             title: "Project Delete Files",
             workspaceRoot: "/tmp/project-delete-files",
             defaultModelSelection: null,
@@ -1130,7 +1130,7 @@ it.layer(BaseTestLayer)("OrchestrationProjectionPipeline", (it) => {
         metadata: {},
         payload: {
           projectId: ProjectId.make("project-a"),
-          kind: "code",
+          kind: "vault",
           title: "Project A",
           workspaceRoot: "/tmp/project-a",
           defaultModelSelection: null,
@@ -1258,7 +1258,7 @@ it.layer(BaseTestLayer)("OrchestrationProjectionPipeline", (it) => {
         metadata: {},
         payload: {
           projectId: ProjectId.make("project-empty"),
-          kind: "code",
+          kind: "vault",
           title: "Project Empty",
           workspaceRoot: "/tmp/project-empty",
           defaultModelSelection: null,
@@ -1399,7 +1399,7 @@ it.layer(BaseTestLayer)("OrchestrationProjectionPipeline", (it) => {
           metadata: {},
           payload: {
             projectId: ProjectId.make("project-conflict"),
-            kind: "code",
+            kind: "vault",
             title: "Project Conflict",
             workspaceRoot: "/tmp/project-conflict",
             defaultModelSelection: null,
@@ -1544,7 +1544,7 @@ it.layer(BaseTestLayer)("OrchestrationProjectionPipeline", (it) => {
         metadata: {},
         payload: {
           projectId: ProjectId.make("project-stale-approval"),
-          kind: "code",
+          kind: "vault",
           title: "Project Stale Approval",
           workspaceRoot: "/tmp/project-stale-approval",
           defaultModelSelection: null,
@@ -1688,7 +1688,7 @@ it.layer(BaseTestLayer)("OrchestrationProjectionPipeline", (it) => {
         metadata: {},
         payload: {
           projectId: ProjectId.make("project-nonstale-approval"),
-          kind: "code",
+          kind: "vault",
           title: "Project Non-Stale Approval",
           workspaceRoot: "/tmp/project-nonstale-approval",
           defaultModelSelection: null,
@@ -1869,7 +1869,7 @@ it.layer(BaseTestLayer)("OrchestrationProjectionPipeline", (it) => {
         metadata: {},
         payload: {
           projectId: ProjectId.make("project-revert"),
-          kind: "code",
+          kind: "vault",
           title: "Project Revert",
           workspaceRoot: "/tmp/project-revert",
           defaultModelSelection: null,
@@ -2212,7 +2212,7 @@ engineLayer("OrchestrationProjectionPipeline via engine dispatch", (it) => {
         type: "project.create",
         commandId: CommandId.make("cmd-live-project"),
         projectId: ProjectId.make("project-live"),
-        kind: "code",
+        kind: "vault",
         title: "Live Project",
         workspaceRoot: "/tmp/project-live",
         defaultModelSelection: {
@@ -2251,7 +2251,7 @@ engineLayer("OrchestrationProjectionPipeline via engine dispatch", (it) => {
         type: "project.create",
         commandId: CommandId.make("cmd-scripts-project-create"),
         projectId: ProjectId.make("project-scripts"),
-        kind: "code",
+        kind: "vault",
         title: "Scripts Project",
         workspaceRoot: "/tmp/project-scripts",
         defaultModelSelection: {

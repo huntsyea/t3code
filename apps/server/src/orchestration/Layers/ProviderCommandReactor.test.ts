@@ -373,7 +373,7 @@ describe("ProviderCommandReactor", () => {
         type: "project.create",
         commandId: CommandId.make("cmd-project-create"),
         projectId: asProjectId("project-1"),
-        kind: "code",
+        kind: "vault",
         title: "Provider Project",
         workspaceRoot: "/tmp/provider-project",
         defaultModelSelection: modelSelection,

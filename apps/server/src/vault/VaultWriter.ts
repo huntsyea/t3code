@@ -73,7 +73,7 @@ export const makeVaultWriter = Effect.gen(function* () {
               return Effect.fail(
                 new VaultWriterError({
                   code: "KIND_MISMATCH",
-                  message: `Project ${projectId} is not a vault (kind=${project.kind ?? "code"})`,
+                  message: `Project ${projectId} is not a vault (kind=${project.kind ?? "unknown"})`,
                 }),
               );
             }
