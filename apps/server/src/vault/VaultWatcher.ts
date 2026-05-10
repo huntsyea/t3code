@@ -21,12 +21,11 @@ import * as Scope from "effect/Scope";
 import * as SynchronizedRef from "effect/SynchronizedRef";
 
 import { ProjectionProjectRepository } from "../persistence/Services/ProjectionProjects.ts";
+import { ignoredVaultWatchPatterns } from "./vaultIgnore.ts";
 
 export const VAULT_WATCHER_DEBOUNCE_MS = 250;
 export const VAULT_WATCHER_AWAIT_WRITE_FINISH_MS = 100;
 const NOTE_FILE_EXTENSION = ".md";
-
-const IGNORED_DIRECTORY_PATTERNS: ReadonlyArray<RegExp> = [/\/\.git\//, /\/\.atlas\//];
 
 export type VaultFileEventHandler = (event: VaultFileEvent) => Effect.Effect<void>;
 
@@ -181,7 +180,7 @@ export const makeVaultWatcherWithOptions = (options: VaultWatcherFactoryOptions 
         const watcherResult = yield* Effect.try({
           try: () =>
             chokidarFactory(vaultRoot, {
-              ignored: [...IGNORED_DIRECTORY_PATTERNS],
+              ignored: [...ignoredVaultWatchPatterns],
               ignoreInitial: true,
               awaitWriteFinish: { stabilityThreshold: awaitWriteFinishMs, pollInterval: 50 },
               persistent: true,

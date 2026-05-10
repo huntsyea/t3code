@@ -176,7 +176,18 @@ describe("VaultWatcher.subscribe", () => {
     const ignored = factory.invocations[0]!.options.ignored;
     expect(Array.isArray(ignored)).toBe(true);
     const patterns = (ignored as ReadonlyArray<RegExp>).map((entry) => entry.source);
-    expect(patterns).toEqual(["\\/\\.git\\/", "\\/\\.atlas\\/"]);
+    expect(patterns).toEqual(
+      expect.arrayContaining([
+        "(^|\\/)\\.atlas(\\/|$)",
+        "(^|\\/)\\.git(\\/|$)",
+        "(^|\\/)\\.next(\\/|$)",
+        "(^|\\/)\\.turbo(\\/|$)",
+        "(^|\\/)coverage(\\/|$)",
+        "(^|\\/)dist(\\/|$)",
+        "(^|\\/)node_modules(\\/|$)",
+        "(^|\\/)\\.[^/]+(\\/|$)",
+      ]),
+    );
   });
 
   it("debounces rapid changes into a single batched dispatch per relative path", async () => {

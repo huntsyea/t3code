@@ -18,6 +18,7 @@ import {
 
 import { ProjectionProjectRepository } from "../persistence/Services/ProjectionProjects.ts";
 import { VcsDriverRegistry } from "../vcs/VcsDriverRegistry.ts";
+import { isIgnoredVaultName } from "./vaultIgnore.ts";
 
 const NOTE_FILE_EXTENSION = ".md";
 
@@ -46,10 +47,6 @@ const isNotFoundPlatformError = (cause: unknown): boolean => {
   }
   return false;
 };
-
-function isHiddenName(name: string): boolean {
-  return name.startsWith(".");
-}
 
 function compareEntries(a: VaultEntry, b: VaultEntry): number {
   if (a.kind !== b.kind) {
@@ -316,7 +313,7 @@ export const makeVaultReader = Effect.gen(function* () {
       );
 
       const candidatesWithStats = yield* Effect.forEach(
-        names.filter((name) => name && !isHiddenName(name)),
+        names.filter((name) => name && !isIgnoredVaultName(name)),
         (name) =>
           Effect.gen(function* () {
             const childAbs = path.join(absPath, name);

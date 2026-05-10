@@ -22,6 +22,7 @@ import * as SynchronizedRef from "effect/SynchronizedRef";
 import { ProjectionProjectRepository } from "../../persistence/Services/ProjectionProjects.ts";
 import { VaultIndex } from "../../vault/VaultIndex.ts";
 import { VaultWatcher } from "../../vault/VaultWatcher.ts";
+import { isIgnoredVaultName, isIgnoredVaultRelativePath } from "../../vault/vaultIgnore.ts";
 import {
   VaultIndexReactor,
   type VaultIndexReactorShape,
@@ -125,9 +126,6 @@ const basenameFromRelativePath = (relativePath: string): string => {
   return base.endsWith(NOTE_FILE_EXTENSION) ? base.slice(0, -NOTE_FILE_EXTENSION.length) : base;
 };
 
-const isHiddenSegment = (relativePath: string): boolean =>
-  relativePath.split("/").some((segment) => segment.length > 0 && segment.startsWith("."));
-
 interface ProjectReactorEntry {
   readonly projectId: ProjectId;
   readonly vaultRoot: string;
@@ -196,7 +194,7 @@ const make = Effect.gen(function* () {
 
   const indexFile = (entry: ProjectReactorEntry, relativePath: string): Effect.Effect<void> =>
     Effect.gen(function* () {
-      if (isHiddenSegment(relativePath)) return;
+      if (isIgnoredVaultRelativePath(relativePath)) return;
       if (!relativePath.toLowerCase().endsWith(NOTE_FILE_EXTENSION)) return;
 
       const absolutePath = nodePath.join(entry.vaultRoot, relativePath);
@@ -309,28 +307,33 @@ const make = Effect.gen(function* () {
     vaultRoot: string,
   ): Effect.Effect<ReadonlyArray<string>, VaultWatcherError> =>
     Effect.tryPromise({
-      try: () => fs.readdir(vaultRoot, { withFileTypes: true, recursive: true }),
+      try: async () => {
+        const collected: Array<string> = [];
+        const visit = async (absoluteDir: string, relativeDir: string): Promise<void> => {
+          const dirents = await fs.readdir(absoluteDir, { withFileTypes: true });
+          for (const dirent of dirents) {
+            if (isIgnoredVaultName(dirent.name)) continue;
+            const relativePath = relativeDir ? `${relativeDir}/${dirent.name}` : dirent.name;
+            const fullPath = nodePath.join(absoluteDir, dirent.name);
+            if (dirent.isDirectory()) {
+              await visit(fullPath, relativePath);
+              continue;
+            }
+            if (!dirent.isFile()) continue;
+            if (!relativePath.toLowerCase().endsWith(NOTE_FILE_EXTENSION)) continue;
+            collected.push(relativePath);
+          }
+        };
+        await visit(vaultRoot, "");
+        return collected;
+      },
       catch: (cause) =>
         new VaultWatcherError({
           code: "WATCH_FAILED",
           message: `Failed to read vault root for initial scan: ${vaultRoot}`,
           cause,
         }),
-    }).pipe(
-      Effect.map((dirents) => {
-        const collected: Array<string> = [];
-        for (const dirent of dirents) {
-          if (!dirent.isFile()) continue;
-          const fullPath = nodePath.join(dirent.parentPath ?? vaultRoot, dirent.name);
-          const rel = nodePath.relative(vaultRoot, fullPath).split(nodePath.sep).join("/");
-          if (rel.length === 0) continue;
-          if (isHiddenSegment(rel)) continue;
-          if (!rel.toLowerCase().endsWith(NOTE_FILE_EXTENSION)) continue;
-          collected.push(rel);
-        }
-        return collected as ReadonlyArray<string>;
-      }),
-    );
+    });
 
   const buildEntry = (projectId: ProjectId, vaultRoot: string) =>
     Effect.gen(function* () {
